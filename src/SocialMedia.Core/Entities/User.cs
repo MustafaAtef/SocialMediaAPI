@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SocialMedia.Core.Entities;
 
@@ -9,6 +10,8 @@ public class User
     public string LastName { get; set; }
     public string Email { get; set; }
     public string Password { get; set; }
+    public int FollowersCount { get; set; }
+    public int FollowingCount { get; set; }
     public string? RefreshToken { get; set; }
     public DateTime? RefreshTokenExpiryTime { get; set; }
     public string? EmailVerificationToken { get; set; }
@@ -20,4 +23,8 @@ public class User
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 
+    public ICollection<Post>? Posts { get; set; }
+    public ICollection<Comment>? Comments { get; set; }
+    public ICollection<PostReact>? PostReacts { get; set; }
+    public ICollection<CommentReact>? CommentReacts { get; set; }
 }
