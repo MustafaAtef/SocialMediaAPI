@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SocialMedia.Infrastructure.Database;
 
@@ -11,9 +12,11 @@ using SocialMedia.Infrastructure.Database;
 namespace SocialMedia.Infrastructure.Database.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250622154855_ChangeStorageProviderAvatarColumn")]
+    partial class ChangeStorageProviderAvatarColumn
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -72,9 +75,6 @@ namespace SocialMedia.Infrastructure.Database.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("ReactionsCount")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RepliesCount")
                         .HasColumnType("int");
 
                     b.Property<DateTime>("UpdatedAt")

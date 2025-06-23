@@ -8,6 +8,7 @@ using SocialMedia.Core.Entities;
 using Microsoft.AspNetCore.Http;
 
 using Microsoft.Extensions.Configuration;
+using SocialMedia.Core.Enumerations;
 
 namespace SocialMedia.Application.Services;
 
@@ -54,7 +55,7 @@ public class AuthService : IAuthService
         newUser.EmailVerificationTokenExpiryTime = DateTime.Now.AddMinutes(_configuration["EmailVerificationTokenExpiryMinutes"] != null ? int.Parse(_configuration["EmailVerificationTokenExpiryMinutes"] ?? "") : 15);
         if (registerRequest.Avatar != null)
         {
-            var uploadedImage = await _fileUploader.UploadImageAsync(registerRequest.Avatar, "users-avatars");
+            var uploadedImage = await _fileUploader.UploadAsync(registerRequest.Avatar, "users-avatars");
             newUser.Avatar = new Avatar
             {
                 StorageProvider = uploadedImage.StorageProvider,
@@ -68,20 +69,21 @@ public class AuthService : IAuthService
         // a better approach would be to use a background service or a message queue to send the email asynchronously
         // but for simplicity we will keep it synchronous for now
 
-        //await _emailService.SendEmailVerificationAsync(newUser.Email, newUser.EmailVerificationToken, newUser.EmailVerificationTokenExpiryTime.Value);
+        await _emailService.SendEmailVerificationAsync(newUser.Email, newUser.EmailVerificationToken, newUser.EmailVerificationTokenExpiryTime.Value);
 
         return new AuthenticatedUserDto
         {
             Id = newUser.Id,
-            FirstName = newUser.FirstName,
-            LastName = newUser.LastName,
+            Name = newUser.FirstName + " " + newUser.LastName,
             Email = newUser.Email,
             IsEmailVerified = false,
+            FollowersCount = newUser.FollowersCount,
+            FollowingCount = newUser.FollowingCount,
             Token = jwtData.Token,
             TokenExpirationDate = jwtData.TokenExpirationDate,
             RefreshToken = jwtData.RefreshToken,
             RefreshTokenExpirationDate = jwtData.RefreshTokenExpirationDate,
-            AvatarUrl = newUser.Avatar is null ? "" : newUser.Avatar.StorageProvider == "server" ? $"{_httpContextAccessor.HttpContext.Request.Scheme}://{_httpContextAccessor.HttpContext.Request.Host}{newUser.Avatar.Url}" : newUser.Avatar.Url
+            AvatarUrl = newUser.Avatar is null ? "" : newUser.Avatar.StorageProvider == StorageProvider.Disk ? $"{_httpContextAccessor.HttpContext.Request.Scheme}://{_httpContextAccessor.HttpContext.Request.Host}{newUser.Avatar.Url}" : newUser.Avatar.Url
         };
     }
 
@@ -102,10 +104,11 @@ public class AuthService : IAuthService
         return new AuthenticatedUserDto
         {
             Id = user.Id,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
+            Name = user.FirstName + " " + user.LastName,
             Email = user.Email,
             IsEmailVerified = user.IsEmailVerified,
+            FollowersCount = user.FollowersCount,
+            FollowingCount = user.FollowingCount,
             Token = jwtData.Token,
             TokenExpirationDate = jwtData.TokenExpirationDate,
             RefreshToken = jwtData.RefreshToken,
@@ -134,10 +137,11 @@ public class AuthService : IAuthService
         return new AuthenticatedUserDto
         {
             Id = user.Id,
-            FirstName = user.FirstName,
-            LastName = user.LastName,
+            Name = user.FirstName + " " + user.LastName,
             Email = user.Email,
             IsEmailVerified = user.IsEmailVerified,
+            FollowersCount = user.FollowersCount,
+            FollowingCount = user.FollowingCount,
             Token = jwtData.Token,
             TokenExpirationDate = jwtData.TokenExpirationDate,
             RefreshToken = jwtData.RefreshToken,

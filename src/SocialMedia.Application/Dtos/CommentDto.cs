@@ -1,0 +1,48 @@
+using System;
+
+namespace SocialMedia.Application.Dtos;
+
+
+public class CreateCommentDto
+{
+    public int PostId { get; set; }
+    public string Content { get; set; }
+}
+
+public class ReplyCommentDto
+{
+    public int PostId { get; set; }
+    public int ParentCommentId { get; set; }
+    public string Content { get; set; }
+}
+
+public class UpdateCommentDto
+{
+    public int CommentId { get; set; }
+    public int PostId { get; set; }
+    public string Content { get; set; }
+}
+public class CommentDto
+{
+    public int Id { get; set; }
+    public int PostId { get; set; }
+    public string Content { get; set; }
+    public UserDto CreatedBy { get; set; }
+    public int ReactsCount { get; set; }
+    public int RepliesCount { get; set; }
+    public ICollection<CommentDto> Replies { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
+public class CreatedCommentDto
+{
+    public int Id { get; set; }
+    public int? ParentCommentId { get; set; }
+    public int PostId { get; set; }
+    public string Content { get; set; }
+    public UserDto CreatedBy { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+

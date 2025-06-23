@@ -1,10 +1,11 @@
 using System;
 using Microsoft.AspNetCore.Http;
+using SocialMedia.Core.Enumerations;
 
 namespace SocialMedia.Application.ServiceContracts;
 
 public interface IFileUploader
 {
-    Task<(string StorageProvider, string Url)> UploadImageAsync(IFormFile file, string folderName);
-    Task DeleteImageAsync(string url);
+    Task<(StorageProvider StorageProvider, AttachmentType attachmentType, string Url)> UploadAsync(IFormFile file, string folderName);
+    Task DeleteAsync(string url);
 }
