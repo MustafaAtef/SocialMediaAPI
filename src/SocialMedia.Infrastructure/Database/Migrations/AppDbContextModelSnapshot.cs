@@ -45,7 +45,7 @@ namespace SocialMedia.Infrastructure.Database.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("Avatar");
+                    b.ToTable("Avatar", (string)null);
                 });
 
             modelBuilder.Entity("SocialMedia.Core.Entities.Comment", b =>
@@ -93,7 +93,7 @@ namespace SocialMedia.Infrastructure.Database.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Comments");
+                    b.ToTable("Comments", (string)null);
                 });
 
             modelBuilder.Entity("SocialMedia.Core.Entities.CommentReact", b =>
@@ -124,7 +124,7 @@ namespace SocialMedia.Infrastructure.Database.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("CommentReact");
+                    b.ToTable("CommentReact", (string)null);
                 });
 
             modelBuilder.Entity("SocialMedia.Core.Entities.Post", b =>
@@ -162,7 +162,7 @@ namespace SocialMedia.Infrastructure.Database.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Posts");
+                    b.ToTable("Posts", (string)null);
                 });
 
             modelBuilder.Entity("SocialMedia.Core.Entities.PostAttachment", b =>
@@ -190,7 +190,7 @@ namespace SocialMedia.Infrastructure.Database.Migrations
 
                     b.HasIndex("PostId");
 
-                    b.ToTable("PostAttachment");
+                    b.ToTable("PostAttachment", (string)null);
                 });
 
             modelBuilder.Entity("SocialMedia.Core.Entities.PostReact", b =>
@@ -221,7 +221,7 @@ namespace SocialMedia.Infrastructure.Database.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("PostReact");
+                    b.ToTable("PostReact", (string)null);
                 });
 
             modelBuilder.Entity("SocialMedia.Core.Entities.User", b =>
@@ -287,7 +287,7 @@ namespace SocialMedia.Infrastructure.Database.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("SocialMedia.Core.Entities.UserFollower", b =>
@@ -317,7 +317,7 @@ namespace SocialMedia.Infrastructure.Database.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("UserFollowers");
+                    b.ToTable("UserFollowers", (string)null);
                 });
 
             modelBuilder.Entity("SocialMedia.Core.Entities.UserFollowing", b =>
@@ -347,7 +347,7 @@ namespace SocialMedia.Infrastructure.Database.Migrations
                     b.HasIndex("UserId")
                         .IsUnique();
 
-                    b.ToTable("UserFollowings");
+                    b.ToTable("UserFollowings", (string)null);
                 });
 
             modelBuilder.Entity("SocialMedia.Core.Entities.Avatar", b =>

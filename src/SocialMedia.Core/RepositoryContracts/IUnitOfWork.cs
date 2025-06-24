@@ -8,9 +8,9 @@ public interface IUnitOfWork : IDisposable
 {
     IUserRepository Users { get; }
     IPostRepository Posts { get; }
-    ICommentRepository Commnets { get; }
+    ICommentRepository Comments { get; }
     IPostReactRepository PostReacts { get; }
-    ICommentReactRepository CommnetReacts { get; }
+    ICommentReactRepository CommentReacts { get; }
     Task SaveChangesAsync();
 
 }

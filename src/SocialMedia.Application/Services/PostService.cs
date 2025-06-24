@@ -24,7 +24,7 @@ public class PostService : IPostService
     }
     public async Task<PostDto> CreateAsync(CreatePostDto createPostDto)
     {
-        var user = _userService.GetAuthenticatedUser(_httpContextAccessor.HttpContext?.User);
+        var user = _userService.GetAuthenticatedUser();
         if (user == null)
         {
             throw new Exception("User is not authenticated.");
@@ -73,7 +73,7 @@ public class PostService : IPostService
     public async Task<PostDto> UpdateAsync(UpdatePostDto updatePostDto)
     {
         // check if the logged in user is the owner of the post
-        var user = _userService.GetAuthenticatedUser(_httpContextAccessor.HttpContext?.User);
+        var user = _userService.GetAuthenticatedUser();
         if (user == null)
         {
             throw new Exception("User is not authenticated.");

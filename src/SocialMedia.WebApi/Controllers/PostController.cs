@@ -11,10 +11,12 @@ namespace SocialMedia.WebApi.Controllers
     {
         private readonly IPostService _postService;
         private readonly ICommentService _commentService;
-        public PostController(IPostService postService, ICommentService commentService)
+        private readonly IReactService _reactService;
+        public PostController(IPostService postService, ICommentService commentService, IReactService reactService)
         {
-            _commentService = commentService;
             _postService = postService;
+            _commentService = commentService;
+            _reactService = reactService;
         }
 
         [HttpPost]
@@ -51,6 +53,35 @@ namespace SocialMedia.WebApi.Controllers
             updateCommentDto.PostId = postId;
             updateCommentDto.CommentId = commentId;
             return await _commentService.UpdateAsync(updateCommentDto);
+        }
+
+        [HttpPost("{postId}/react")]
+        public async Task<ActionResult<PostReactDto>> ReactToPostAsync(int postId, [FromBody] ReactToPostDto reactToPostDto)
+        {
+            reactToPostDto.PostId = postId;
+            return await _reactService.ReactToPostAsync(reactToPostDto);
+        }
+
+        [HttpPost("{postId}/comment/{commentId}/react")]
+        public async Task<ActionResult<CommentReactDto>> ReactToCommentAsync(int postId, int commentId, [FromBody] ReactToCommentDto reactToCommentDto)
+        {
+            reactToCommentDto.PostId = postId;
+            reactToCommentDto.CommentId = commentId;
+            return await _reactService.ReactToCommentAsync(reactToCommentDto);
+        }
+
+        [HttpDelete("{postId}/react")]
+        public async Task<IActionResult> RemovePostReactAsync(int postId)
+        {
+            await _reactService.RemovePostReactAsync(postId);
+            return Ok();
+        }
+
+        [HttpDelete("{postId}/comment/{commentId}/react")]
+        public async Task<IActionResult> RemoveCommentReactAsync(int postId, int commentId)
+        {
+            await _reactService.RemoveCommentReactAsync(commentId);
+            return Ok();
         }
 
     }

@@ -19,7 +19,7 @@ public class CommentService : ICommentService
     }
     public async Task<CreatedCommentDto> CreateAsync(CreateCommentDto createCommentDto)
     {
-        var user = _userService.GetAuthenticatedUser(_httpContextAccessor.HttpContext?.User);
+        var user = _userService.GetAuthenticatedUser();
         if (user == null)
         {
             throw new Exception("User is not authenticated.");
@@ -38,7 +38,7 @@ public class CommentService : ICommentService
             RepliesCount = 0
         };
         post.CommentsCount++;
-        _unitOfWork.Commnets.Add(comment);
+        _unitOfWork.Comments.Add(comment);
         await _unitOfWork.SaveChangesAsync();
         return new CreatedCommentDto
         {
@@ -60,7 +60,7 @@ public class CommentService : ICommentService
     public async Task<CreatedCommentDto> ReplyAsync(ReplyCommentDto replyCommentDto)
     {
         // check if the post exists then check if the parent comment exists
-        var user = _userService.GetAuthenticatedUser(_httpContextAccessor.HttpContext?.User);
+        var user = _userService.GetAuthenticatedUser();
         if (user == null)
         {
             throw new Exception("User is not authenticated.");
@@ -70,7 +70,7 @@ public class CommentService : ICommentService
         {
             throw new Exception("Post not found.");
         }
-        var parentComment = await _unitOfWork.Commnets.GetAsync(c => c.Id == replyCommentDto.ParentCommentId && c.PostId == replyCommentDto.PostId);
+        var parentComment = await _unitOfWork.Comments.GetAsync(c => c.Id == replyCommentDto.ParentCommentId && c.PostId == replyCommentDto.PostId);
         if (parentComment == null)
         {
             throw new Exception("Parent comment not found.");
@@ -86,7 +86,7 @@ public class CommentService : ICommentService
         };
         parentComment.RepliesCount++;
         post.CommentsCount++;
-        _unitOfWork.Commnets.Add(reply);
+        _unitOfWork.Comments.Add(reply);
         await _unitOfWork.SaveChangesAsync();
         return new CreatedCommentDto
         {
@@ -109,12 +109,12 @@ public class CommentService : ICommentService
     public async Task<CommentDto> UpdateAsync(UpdateCommentDto updateCommentDto)
     {
         // check if the post exists and the comment exists and the owner of the comment is the authenticated user then update the comment
-        var user = _userService.GetAuthenticatedUser(_httpContextAccessor.HttpContext?.User);
+        var user = _userService.GetAuthenticatedUser();
         if (user == null)
         {
             throw new Exception("User is not authenticated.");
         }
-        var comment = await _unitOfWork.Commnets.GetAsync(c => c.Id == updateCommentDto.CommentId && c.PostId == updateCommentDto.PostId);
+        var comment = await _unitOfWork.Comments.GetAsync(c => c.Id == updateCommentDto.CommentId && c.PostId == updateCommentDto.PostId);
         if (comment == null)
         {
             throw new Exception("Comment not found.");

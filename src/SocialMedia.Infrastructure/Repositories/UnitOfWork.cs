@@ -39,7 +39,7 @@ public class UnitOfWork : IUnitOfWork
         }
     }
 
-    public ICommentRepository Commnets
+    public ICommentRepository Comments
     {
         get
         {
@@ -59,7 +59,7 @@ public class UnitOfWork : IUnitOfWork
         }
     }
 
-    public ICommentReactRepository CommnetReacts
+    public ICommentReactRepository CommentReacts
     {
         get
         {

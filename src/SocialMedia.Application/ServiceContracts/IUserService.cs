@@ -6,5 +6,5 @@ namespace SocialMedia.Application.ServiceContracts;
 
 public interface IUserService
 {
-    UserDto? GetAuthenticatedUser(ClaimsPrincipal? principal);
+    UserDto? GetAuthenticatedUser();
 }
