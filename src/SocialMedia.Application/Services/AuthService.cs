@@ -69,7 +69,7 @@ public class AuthService : IAuthService
         // a better approach would be to use a background service or a message queue to send the email asynchronously
         // but for simplicity we will keep it synchronous for now
 
-        await _emailService.SendEmailVerificationAsync(newUser.Email, newUser.EmailVerificationToken, newUser.EmailVerificationTokenExpiryTime.Value);
+        //await _emailService.SendEmailVerificationAsync(newUser.Email, newUser.EmailVerificationToken, newUser.EmailVerificationTokenExpiryTime.Value);
 
         return new AuthenticatedUserDto
         {

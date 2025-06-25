@@ -1,9 +1,10 @@
 using System;
 using EducationCenter.Core.RepositoryContracts;
 using SocialMedia.Application.Dtos;
+using SocialMedia.Application.ServiceContracts;
 using SocialMedia.Core.Entities;
 
-namespace SocialMedia.Application.ServiceContracts;
+namespace SocialMedia.Application.Service;
 
 public class ReactService : IReactService
 {

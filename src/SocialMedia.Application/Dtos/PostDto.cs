@@ -1,10 +1,13 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
 
 namespace SocialMedia.Application.Dtos;
 
 public class CreatePostDto
 {
+    [Required(ErrorMessage = "Post content is required.")]
+    [MaxLength(1000, ErrorMessage = "Post content max length is 1000 characters.")]
     public string Content { get; set; }
     public List<IFormFile>? Attachments { get; set; }
 }

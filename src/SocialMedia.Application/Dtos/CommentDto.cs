@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel.DataAnnotations;
 
 namespace SocialMedia.Application.Dtos;
 
@@ -6,6 +7,8 @@ namespace SocialMedia.Application.Dtos;
 public class CreateCommentDto
 {
     public int PostId { get; set; }
+    [Required(ErrorMessage = "Comment content is required.")]
+    [MaxLength(500, ErrorMessage = "Comment max length is 500 characters")]
     public string Content { get; set; }
 }
 
@@ -13,6 +16,8 @@ public class ReplyCommentDto
 {
     public int PostId { get; set; }
     public int ParentCommentId { get; set; }
+    [Required(ErrorMessage = "Comment content is required.")]
+    [MaxLength(500, ErrorMessage = "Comment max length is 500 characters")]
     public string Content { get; set; }
 }
 
@@ -20,6 +25,8 @@ public class UpdateCommentDto
 {
     public int CommentId { get; set; }
     public int PostId { get; set; }
+    [Required(ErrorMessage = "Comment content is required.")]
+    [MaxLength(500, ErrorMessage = "Comment max length is 500 characters")]
     public string Content { get; set; }
 }
 public class CommentDto

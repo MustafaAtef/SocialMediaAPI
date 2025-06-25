@@ -9,6 +9,7 @@ using SocialMedia.Infrastructure.Email;
 using SocialMedia.Infrastructure.FileUploading;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using SocialMedia.Application.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 

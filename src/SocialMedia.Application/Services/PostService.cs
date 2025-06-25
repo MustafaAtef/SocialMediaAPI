@@ -88,7 +88,7 @@ public class PostService : IPostService
             throw new Exception("You are not authorized to update this post.");
         }
         // update the content of the post then delete all deleted attachments ids and insert any new attachments 
-        post.Content = updatePostDto.Content;
+        if (updatePostDto.Content is not null) post.Content = updatePostDto.Content;
         post.UpdatedAt = DateTime.Now;
 
         if (updatePostDto.AddedAttachments != null)
