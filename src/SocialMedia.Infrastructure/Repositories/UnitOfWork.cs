@@ -19,6 +19,8 @@ public class UnitOfWork : IUnitOfWork
     private ICommentRepository? _comments = null;
     private IPostReactRepository? _postReacts = null;
     private ICommentReactRepository? _commentReacts = null;
+    private IFollowerFollowingRepository? _followersFollowings = null;
+
     public IUserRepository Users
     {
         get
@@ -66,6 +68,15 @@ public class UnitOfWork : IUnitOfWork
             if (_commentReacts == null)
                 _commentReacts = new CommentReactRepository(_appDbContext);
             return _commentReacts;
+        }
+    }
+    public IFollowerFollowingRepository FollowersFollowings
+    {
+        get
+        {
+            if (_followersFollowings == null)
+                _followersFollowings = new FollowerFollowingRepository(_appDbContext);
+            return _followersFollowings;
         }
     }
     public void Dispose()

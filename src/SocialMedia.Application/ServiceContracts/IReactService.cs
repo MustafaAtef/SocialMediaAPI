@@ -9,4 +9,7 @@ public interface IReactService
     Task<CommentReactDto> ReactToCommentAsync(ReactToCommentDto reactToCommentDto);
     Task RemovePostReactAsync(int postId);
     Task RemoveCommentReactAsync(int commentId);
+    Task<PagedList<PostReactDto>> GetPagedPostReactsAsync(int postId, int page, int pageSize);
+    Task<PagedList<CommentReactDto>> GetPagedcommentReactsAsync(int commentId, int page, int pageSize);
+
 }

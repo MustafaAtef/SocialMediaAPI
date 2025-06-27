@@ -11,6 +11,7 @@ public interface IUnitOfWork : IDisposable
     ICommentRepository Comments { get; }
     IPostReactRepository PostReacts { get; }
     ICommentReactRepository CommentReacts { get; }
+    IFollowerFollowingRepository FollowersFollowings { get; }
     Task SaveChangesAsync();
 
 }

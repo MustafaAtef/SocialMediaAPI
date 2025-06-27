@@ -37,18 +37,20 @@ public class CommentDto
     public UserDto CreatedBy { get; set; }
     public int ReactsCount { get; set; }
     public int RepliesCount { get; set; }
-    public ICollection<CommentDto> Replies { get; set; }
+    public PagedList<CommentWithoutRepliesDto>? Replies { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
 
-public class CreatedCommentDto
+public class CommentWithoutRepliesDto
 {
     public int Id { get; set; }
     public int? ParentCommentId { get; set; }
     public int PostId { get; set; }
     public string Content { get; set; }
     public UserDto CreatedBy { get; set; }
+    public int ReactsCount { get; set; }
+
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

@@ -31,6 +31,23 @@ public class AppDbContext : DbContext
             entity.Property(u => u.UpdatedAt).HasDefaultValueSql("GETDATE()");
         });
 
+        modelBuilder.Entity<FollowerFollowing>(entity =>
+        {
+            entity.HasKey(ff => new { ff.FollowerId, ff.FollowingId });
+
+            entity.HasOne(ff => ff.Follower)
+                .WithMany(u => u.Followings)
+                .HasForeignKey(ff => ff.FollowerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(ff => ff.Following)
+                .WithMany(u => u.Followers)
+                .HasForeignKey(ff => ff.FollowingId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.Property(ff => ff.CreatedAt).HasDefaultValueSql("GETDATE()");
+        });
+
         modelBuilder.Entity<Post>(entity =>
         {
             entity.HasOne(p => p.User)
@@ -68,42 +85,11 @@ public class AppDbContext : DbContext
             entity.Property(cr => cr.CreatedAt).HasDefaultValueSql("GETDATE()");
         });
 
-        modelBuilder.Entity<UserFollower>(entity =>
-        {
-            entity.HasOne(uf => uf.Follower)
-                .WithOne()
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasOne(uf => uf.User)
-                .WithOne()
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entity.Property(uf => uf.CreatedAt).HasDefaultValueSql("GETDATE()");
-        });
-        modelBuilder.Entity<UserFollowing>(entity =>
-        {
-            entity.HasOne(uf => uf.Following)
-                .WithOne()
-                .OnDelete(DeleteBehavior.Restrict);
-
-            entity.HasOne(uf => uf.User)
-                .WithOne()
-                .OnDelete(DeleteBehavior.Restrict);
-            entity.Property(uf => uf.CreatedAt).HasDefaultValueSql("GETDATE()");
-        });
-
-
-
-
     }
     public DbSet<User> Users { get; set; } = null!;
     public DbSet<Post> Posts { get; set; } = null!;
     public DbSet<Comment> Comments { get; set; } = null!;
-    public DbSet<UserFollower> UserFollowers { get; set; } = null!;
-    public DbSet<UserFollowing> UserFollowings { get; set; } = null!;
-
-
-
+    public DbSet<FollowerFollowing> FollowerFollowing { get; set; } = null!;
 }
 
 public static class AppDbContextExtensions

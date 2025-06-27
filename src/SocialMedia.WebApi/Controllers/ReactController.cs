@@ -5,7 +5,7 @@ using SocialMedia.Application.ServiceContracts;
 
 namespace SocialMedia.WebApi.Controllers
 {
-    [Route("api/post")]
+    [Route("api/posts")]
     [ApiController]
     public class ReactController : ControllerBase
     {
@@ -14,14 +14,14 @@ namespace SocialMedia.WebApi.Controllers
         {
             _reactService = reactService;
         }
-        [HttpPost("{postId}/react")]
+        [HttpPost("{postId}/reacts")]
         public async Task<ActionResult<PostReactDto>> ReactToPostAsync(int postId, [FromBody] ReactToPostDto reactToPostDto)
         {
             reactToPostDto.PostId = postId;
             return await _reactService.ReactToPostAsync(reactToPostDto);
         }
 
-        [HttpPost("{postId}/comment/{commentId}/react")]
+        [HttpPost("{postId}/comments/{commentId}/reacts")]
         public async Task<ActionResult<CommentReactDto>> ReactToCommentAsync(int postId, int commentId, [FromBody] ReactToCommentDto reactToCommentDto)
         {
             reactToCommentDto.PostId = postId;
@@ -29,18 +29,30 @@ namespace SocialMedia.WebApi.Controllers
             return await _reactService.ReactToCommentAsync(reactToCommentDto);
         }
 
-        [HttpDelete("{postId}/react")]
+        [HttpDelete("{postId}/reacts")]
         public async Task<IActionResult> RemovePostReactAsync(int postId)
         {
             await _reactService.RemovePostReactAsync(postId);
             return Ok();
         }
 
-        [HttpDelete("{postId}/comment/{commentId}/react")]
-        public async Task<IActionResult> RemoveCommentReactAsync(int postId, int commentId)
+        [HttpDelete("{postId}/comments/{commentId}/reacts")]
+        public async Task<IActionResult> RemoveCommentReactAsync(int commentId)
         {
             await _reactService.RemoveCommentReactAsync(commentId);
             return Ok();
+        }
+
+        [HttpGet("{postId}/reacts")]
+        public async Task<ActionResult<PagedList<PostReactDto>>> GetPostReactsAsync(int postId, int page = 1, int pageSize = 100)
+        {
+            return await _reactService.GetPagedPostReactsAsync(postId, page, pageSize);
+        }
+
+        [HttpGet("{postId}/comments/{commentId}/reacts")]
+        public async Task<ActionResult<PagedList<CommentReactDto>>> GetCommentReactsAsync(int commentId, int page = 1, int pageSize = 100)
+        {
+            return await _reactService.GetPagedcommentReactsAsync(commentId, page, pageSize);
         }
     }
 }

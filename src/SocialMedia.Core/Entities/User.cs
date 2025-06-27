@@ -22,8 +22,10 @@ public class User
     public Avatar? Avatar { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
-    public ICollection<Post>? Posts { get; set; } = new List<Post>();
-    public ICollection<Comment>? Comments { get; set; } = new List<Comment>();
-    public ICollection<PostReact>? PostReacts { get; set; } = new List<PostReact>();
-    public ICollection<CommentReact>? CommentReacts { get; set; } = new List<CommentReact>();
+    public ICollection<Post> Posts { get; set; } = new List<Post>();
+    public ICollection<Comment> Comments { get; set; } = new List<Comment>();
+    public ICollection<PostReact> PostReacts { get; set; } = new List<PostReact>();
+    public ICollection<CommentReact> CommentReacts { get; set; } = new List<CommentReact>();
+    public ICollection<FollowerFollowing> Followers { get; set; } = new List<FollowerFollowing>();
+    public ICollection<FollowerFollowing> Followings { get; set; } = new List<FollowerFollowing>();
 }

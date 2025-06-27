@@ -83,7 +83,7 @@ public class AuthService : IAuthService
             TokenExpirationDate = jwtData.TokenExpirationDate,
             RefreshToken = jwtData.RefreshToken,
             RefreshTokenExpirationDate = jwtData.RefreshTokenExpirationDate,
-            AvatarUrl = newUser.Avatar is null ? "" : newUser.Avatar.StorageProvider == StorageProvider.Disk ? $"{_httpContextAccessor.HttpContext.Request.Scheme}://{_httpContextAccessor.HttpContext.Request.Host}{newUser.Avatar.Url}" : newUser.Avatar.Url
+            AvatarUrl = newUser.Avatar is null ? "" : newUser.Avatar.Url
         };
     }
 

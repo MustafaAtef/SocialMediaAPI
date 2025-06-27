@@ -15,12 +15,14 @@ public class PostService : IPostService
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IFileUploader _fileUploader;
     private readonly IUserService _userService;
-    public PostService(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor, IFileUploader fileUploader, IUserService userService)
+    private readonly ICommentService _commentService;
+    public PostService(IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor, IFileUploader fileUploader, IUserService userService, ICommentService commentService)
     {
         _unitOfWork = unitOfWork;
         _httpContextAccessor = httpContextAccessor;
         _fileUploader = fileUploader;
         _userService = userService;
+        _commentService = commentService;
     }
     public async Task<PostDto> CreateAsync(CreatePostDto createPostDto)
     {
@@ -65,6 +67,7 @@ public class PostService : IPostService
             },
             ReactsCount = 0,
             CommentsCount = 0,
+            Comments = null,
             CreatedAt = post.CreatedAt,
             UpdatedAt = post.UpdatedAt
         };
@@ -137,6 +140,62 @@ public class PostService : IPostService
             CommentsCount = post.CommentsCount,
             CreatedAt = post.CreatedAt,
             UpdatedAt = post.UpdatedAt
+        };
+    }
+    public async Task<PagedList<UserPostsDto>> GetPagedPostsAsync(int userId, int page, int pageSize)
+    {
+        var user = await _unitOfWork.Users.GetAsync(u => u.Id == userId);
+        if (user is null)
+        {
+            throw new Exception();
+        }
+        var posts = await _unitOfWork.Posts.GetAllAsync(page, pageSize, p => p.UserId == userId, p => p.CreatedAt, "desc", ["Attachments"]);
+        var postsCount = await _unitOfWork.Posts.CountAsync(p => p.UserId == userId);
+        return new(postsCount, pageSize, page, posts.Select(p => new UserPostsDto()
+        {
+            Id = p.Id,
+            Content = p.Content,
+            Attachments = p.Attachments?.Select(a => new AttachmentDto
+            {
+                Id = a.Id,
+                Url = a.Url
+            }).ToList() ?? new List<AttachmentDto>(),
+            CreatedAt = p.CreatedAt,
+            UpdatedAt = p.UpdatedAt,
+            ReactsCount = p.ReactionsCount,
+            CommentsCount = p.CommentsCount
+        }).ToList());
+    }
+
+    public async Task<PostDto> GetPostAsync(int postId, int commentPageSize, int commentRepliesSize)
+    {
+        var post = await _unitOfWork.Posts.GetAsync(p => p.Id == postId, ["Attachments", "User.Avatar"]);
+        if (post is null)
+        {
+            throw new Exception();
+        }
+        var postComments = await _unitOfWork.Comments.GetAllAsync(1, commentPageSize, commentRepliesSize, postId);
+        return new()
+        {
+            Id = post.Id,
+            Content = post.Content,
+            Attachments = post.Attachments?.Select(a => new AttachmentDto
+            {
+                Id = a.Id,
+                Url = a.Url
+            }).ToList() ?? new List<AttachmentDto>(),
+            CreatedBy = new UserDto
+            {
+                Id = post.User.Id,
+                Name = post.User.FirstName + " " + post.User.LastName,
+                Email = post.User.Email,
+                AvatarUrl = post.User.Avatar?.Url ?? ""
+            },
+            ReactsCount = post.ReactionsCount,
+            CommentsCount = post.CommentsCount,
+            CreatedAt = post.CreatedAt,
+            UpdatedAt = post.UpdatedAt,
+            Comments = await _commentService.GetPagedCommentsAsync(postId, 1, commentPageSize, commentRepliesSize)
         };
     }
 }

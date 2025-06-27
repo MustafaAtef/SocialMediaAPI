@@ -165,5 +165,66 @@ public class ReactService : IReactService
         await _unitOfWork.SaveChangesAsync();
     }
 
+    public async Task<PagedList<PostReactDto>> GetPagedPostReactsAsync(int postId, int page, int pageSize)
+    {
+        var post = await _unitOfWork.Posts.GetAsync(p => p.Id == postId);
+        if (post is null)
+        {
+            throw new Exception();
+        }
+        var postReactions = await _unitOfWork.PostReacts.GetAllAsync(page, pageSize, pr => pr.PostId == postId, pr => pr.CreatedAt, "desc", ["User.Avatar"]);
+        return new(post.ReactionsCount, pageSize, page, postReactions.Select(pr => new PostReactDto()
+        {
+            Id = pr.Id,
+            PostId = pr.PostId,
+            ReactedBy = new UserDto
+            {
+                Id = pr.User.Id,
+                Name = pr.User.FirstName + " " + pr.User.LastName,
+                Email = pr.User.Email,
+                AvatarUrl = pr.User.Avatar?.Url ?? ""
+            },
+            ReactType = pr.ReactType,
+            Name = pr.ReactType.ToString(),
+            CreatedAt = pr.CreatedAt
+        }).ToList());
+    }
 
+    public async Task<PagedList<CommentReactDto>> GetPagedcommentReactsAsync(int commentId, int page, int pageSize)
+    {
+        var comment = await _unitOfWork.Comments.GetAsync(c => c.Id == commentId);
+        if (comment is null)
+        {
+            throw new Exception("Comment not found.");
+        }
+        var commentReactions = await _unitOfWork.CommentReacts.GetAllAsync(
+            page,
+            pageSize,
+            cr => cr.CommentId == commentId,
+            cr => cr.CreatedAt,
+            "desc",
+            ["User.Avatar"]
+        );
+
+        return new PagedList<CommentReactDto>(
+            comment.ReactionsCount,
+            pageSize,
+            page,
+            commentReactions.Select(cr => new CommentReactDto
+            {
+                Id = cr.Id,
+                CommentId = cr.CommentId,
+                ReactedBy = new UserDto
+                {
+                    Id = cr.User.Id,
+                    Name = cr.User.FirstName + " " + cr.User.LastName,
+                    Email = cr.User.Email,
+                    AvatarUrl = cr.User.Avatar?.Url ?? ""
+                },
+                ReactType = cr.ReactType,
+                Name = cr.ReactType.ToString(),
+                CreatedAt = cr.CreatedAt
+            }).ToList()
+        );
+    }
 }

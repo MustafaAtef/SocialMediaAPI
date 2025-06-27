@@ -27,10 +27,23 @@ public class PostDto
     public UserDto CreatedBy { get; set; }
     public int ReactsCount { get; set; }
     public int CommentsCount { get; set; }
-    public ICollection<CommentDto> Comments { get; set; } = new List<CommentDto>();
+    public PagedList<CommentDto>? Comments { get; set; }
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }
+
+public class UserPostsDto
+{
+    public int Id { get; set; }
+    public string Content { get; set; }
+    public List<AttachmentDto> Attachments { get; set; }
+    public int ReactsCount { get; set; }
+    public int CommentsCount { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+}
+
+
 
 public class AttachmentDto
 {

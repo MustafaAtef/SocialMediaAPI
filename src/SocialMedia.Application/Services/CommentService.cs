@@ -18,7 +18,7 @@ public class CommentService : ICommentService
         _userService = userService;
         _httpContextAccessor = httpContextAccessor;
     }
-    public async Task<CreatedCommentDto> CreateAsync(CreateCommentDto createCommentDto)
+    public async Task<CommentWithoutRepliesDto> CreateAsync(CreateCommentDto createCommentDto)
     {
         var user = _userService.GetAuthenticatedUser();
         if (user == null)
@@ -41,7 +41,7 @@ public class CommentService : ICommentService
         post.CommentsCount++;
         _unitOfWork.Comments.Add(comment);
         await _unitOfWork.SaveChangesAsync();
-        return new CreatedCommentDto
+        return new CommentWithoutRepliesDto
         {
             Id = comment.Id,
             PostId = comment.PostId,
@@ -53,12 +53,13 @@ public class CommentService : ICommentService
                 AvatarUrl = user.AvatarUrl
             },
             Content = comment.Content,
+            ReactsCount = 0,
             CreatedAt = comment.CreatedAt,
             UpdatedAt = comment.UpdatedAt
         };
     }
 
-    public async Task<CreatedCommentDto> ReplyAsync(ReplyCommentDto replyCommentDto)
+    public async Task<CommentWithoutRepliesDto> ReplyAsync(ReplyCommentDto replyCommentDto)
     {
         // check if the post exists then check if the parent comment exists
         var user = _userService.GetAuthenticatedUser();
@@ -76,6 +77,10 @@ public class CommentService : ICommentService
         {
             throw new Exception("Parent comment not found.");
         }
+        if (parentComment.ParentComment is not null) // this ensures one level of replies
+        {
+            throw new Exception();
+        }
         var reply = new Comment
         {
             Content = replyCommentDto.Content,
@@ -89,7 +94,7 @@ public class CommentService : ICommentService
         post.CommentsCount++;
         _unitOfWork.Comments.Add(reply);
         await _unitOfWork.SaveChangesAsync();
-        return new CreatedCommentDto
+        return new CommentWithoutRepliesDto
         {
             Id = reply.Id,
             ParentCommentId = parentComment.Id,
@@ -102,6 +107,7 @@ public class CommentService : ICommentService
                 AvatarUrl = user.AvatarUrl
             },
             Content = reply.Content,
+            ReactsCount = 0,
             CreatedAt = reply.CreatedAt,
             UpdatedAt = reply.UpdatedAt
         };
@@ -141,10 +147,81 @@ public class CommentService : ICommentService
             },
             ReactsCount = comment.ReactionsCount,
             RepliesCount = comment.RepliesCount,
-            // LOAD REPLIES
-            Replies = new List<CommentDto>(),
+            // LOAD REPLIES------------------------------------------------------------------------
+            //Replies = new PagedList<CommentWithoutRepliesDto>(),
             CreatedAt = comment.CreatedAt,
             UpdatedAt = comment.UpdatedAt
         };
+    }
+    public async Task<PagedList<CommentDto>> GetPagedCommentsAsync(int postId, int page, int pageSize, int repliesSize)
+    {
+        var post = await _unitOfWork.Posts.GetAsync(p => p.Id == postId);
+        if (post is null)
+        {
+            throw new Exception();
+        }
+        var comments = await _unitOfWork.Comments.GetAllAsync(page, pageSize, repliesSize, postId);
+        var commentsCount = await _unitOfWork.Comments.CountAsync(c => c.PostId == postId && c.ParentComment == null);
+        return new PagedList<CommentDto>(commentsCount, pageSize, page, comments.Select(c => new CommentDto()
+        {
+            Id = c.Id,
+            Content = c.Content,
+            PostId = c.PostId,
+            CreatedBy = new UserDto()
+            {
+                Id = c.User.Id,
+                Name = c.User.FirstName + " " + c.User.LastName,
+                Email = c.User.Email,
+                AvatarUrl = c.User.Avatar?.Url ?? ""
+            },
+            ReactsCount = c.ReactionsCount,
+            RepliesCount = c.RepliesCount,
+            Replies = c.RepliesCount > 0 ? new PagedList<CommentWithoutRepliesDto>(c.RepliesCount, repliesSize, 1,
+             c.Replies.Select(r => new CommentWithoutRepliesDto()
+             {
+                 Id = r.Id,
+                 ParentCommentId = r.ParentCommentId,
+                 PostId = r.PostId,
+                 Content = r.Content,
+                 CreatedBy = new UserDto()
+                 {
+                     Id = r.User.Id,
+                     Name = r.User.FirstName + " " + r.User.LastName,
+                     Email = r.User.Email,
+                     AvatarUrl = r.User.Avatar?.Url ?? ""
+                 },
+                 ReactsCount = r.ReactionsCount,
+                 CreatedAt = r.CreatedAt,
+                 UpdatedAt = r.UpdatedAt
+             }).ToList()) : null,
+            CreatedAt = c.CreatedAt,
+            UpdatedAt = c.UpdatedAt
+        }));
+    }
+
+    public async Task<PagedList<CommentWithoutRepliesDto>> GetPagedRepliesAsync(int parentCommentId, int page, int pageSize)
+    {
+        var parentComment = await _unitOfWork.Comments.GetParentCommentWithReplies(parentCommentId, page, pageSize);
+        if (parentComment is null)
+        {
+            throw new Exception();
+        }
+        return new PagedList<CommentWithoutRepliesDto>(parentComment.RepliesCount, pageSize, page, parentComment.Replies.Select(r => new CommentWithoutRepliesDto()
+        {
+            Id = r.Id,
+            ParentCommentId = parentCommentId,
+            PostId = r.PostId,
+            Content = r.Content,
+            CreatedBy = new UserDto
+            {
+                Id = r.User.Id,
+                Name = r.User.FirstName + " " + r.User.LastName,
+                Email = r.User.Email,
+                AvatarUrl = r.User.Avatar?.Url ?? ""
+            },
+            ReactsCount = r.ReactionsCount,
+            CreatedAt = r.CreatedAt,
+            UpdatedAt = r.UpdatedAt
+        }).ToList());
     }
 }

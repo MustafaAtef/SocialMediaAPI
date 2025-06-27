@@ -4,7 +4,7 @@ using SocialMedia.Application.ServiceContracts;
 
 namespace SocialMedia.WebApi.Controllers
 {
-    [Route("api/post")]
+    [Route("api/posts")]
     [ApiController]
     public class PostController : ControllerBase
     {
@@ -25,6 +25,12 @@ namespace SocialMedia.WebApi.Controllers
         {
             updatePostDto.PostId = postId;
             return await _postService.UpdateAsync(updatePostDto);
+        }
+
+        [HttpGet("{postId}")]
+        public async Task<ActionResult<PostDto>> GetPostAsync(int postId, int commentPageSize = 10, int commentRepliesSize = 10)
+        {
+            return await _postService.GetPostAsync(postId, commentPageSize, commentRepliesSize);
         }
     }
 }
