@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using SocialMedia.Application.Dtos;
 using SocialMedia.Application.ServiceContracts;
 using SocialMedia.Core.Entities;
+using SocialMedia.Core.Exceptions;
 
 namespace SocialMedia.Application.Service;
 
@@ -23,12 +24,12 @@ public class CommentService : ICommentService
         var user = _userService.GetAuthenticatedUser();
         if (user == null)
         {
-            throw new Exception("User is not authenticated.");
+            throw new UnAuthenticatedException("User is not authenticated.");
         }
         var post = await _unitOfWork.Posts.GetAsync(p => p.Id == createCommentDto.PostId);
         if (post == null)
         {
-            throw new Exception("Post not found.");
+            throw new BadRequestException("Post not found.");
         }
         var comment = new Comment
         {
@@ -65,21 +66,21 @@ public class CommentService : ICommentService
         var user = _userService.GetAuthenticatedUser();
         if (user == null)
         {
-            throw new Exception("User is not authenticated.");
+            throw new UnAuthenticatedException("User is not authenticated.");
         }
         var post = await _unitOfWork.Posts.GetAsync(p => p.Id == replyCommentDto.PostId);
         if (post == null)
         {
-            throw new Exception("Post not found.");
+            throw new BadRequestException("Post not found.");
         }
         var parentComment = await _unitOfWork.Comments.GetAsync(c => c.Id == replyCommentDto.ParentCommentId && c.PostId == replyCommentDto.PostId);
         if (parentComment == null)
         {
-            throw new Exception("Parent comment not found.");
+            throw new BadRequestException("Parent comment not found.");
         }
         if (parentComment.ParentComment is not null) // this ensures one level of replies
         {
-            throw new Exception();
+            throw new BadRequestException("Replies are not allowed on replies to comments.");
         }
         var reply = new Comment
         {
@@ -119,16 +120,16 @@ public class CommentService : ICommentService
         var user = _userService.GetAuthenticatedUser();
         if (user == null)
         {
-            throw new Exception("User is not authenticated.");
+            throw new UnAuthenticatedException("User is not authenticated.");
         }
         var comment = await _unitOfWork.Comments.GetAsync(c => c.Id == updateCommentDto.CommentId && c.PostId == updateCommentDto.PostId);
         if (comment == null)
         {
-            throw new Exception("Comment not found.");
+            throw new BadRequestException("Comment not found.");
         }
         if (comment.UserId != user.Id)
         {
-            throw new Exception("unauthorized to update this comment.");
+            throw new UnauthorizedAccessException("User not authorized to update this comment.");
         }
         comment.Content = updateCommentDto.Content;
         comment.UpdatedAt = DateTime.Now;
@@ -158,7 +159,7 @@ public class CommentService : ICommentService
         var post = await _unitOfWork.Posts.GetAsync(p => p.Id == postId);
         if (post is null)
         {
-            throw new Exception();
+            throw new BadRequestException("Post not found.");
         }
         var comments = await _unitOfWork.Comments.GetAllAsync(page, pageSize, repliesSize, postId);
         var commentsCount = await _unitOfWork.Comments.CountAsync(c => c.PostId == postId && c.ParentComment == null);
@@ -204,7 +205,7 @@ public class CommentService : ICommentService
         var parentComment = await _unitOfWork.Comments.GetParentCommentWithReplies(parentCommentId, page, pageSize);
         if (parentComment is null)
         {
-            throw new Exception();
+            throw new BadRequestException("Parent comment not found.");
         }
         return new PagedList<CommentWithoutRepliesDto>(parentComment.RepliesCount, pageSize, page, parentComment.Replies.Select(r => new CommentWithoutRepliesDto()
         {

@@ -10,6 +10,7 @@ using SocialMedia.Infrastructure.FileUploading;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using SocialMedia.Application.Service;
+using SocialMedia.WebApi.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -63,6 +64,8 @@ builder.Services.AddAuthentication().AddJwtBearer(JwtBearerDefaults.Authenticati
 });
 
 var app = builder.Build();
+
+app.UseGlobalErrorHandling();
 
 app.UseStaticFiles();
 

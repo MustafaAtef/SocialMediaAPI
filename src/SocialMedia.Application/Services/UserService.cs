@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using SocialMedia.Application.Dtos;
 using SocialMedia.Application.ServiceContracts;
 using SocialMedia.Core.Entities;
+using SocialMedia.Core.Exceptions;
 
 namespace SocialMedia.Application.Services;
 
@@ -23,22 +24,22 @@ public class UserService : IUserService
         var tokenUser = GetAuthenticatedUser();
         if (tokenUser is null)
         {
-            throw new Exception();
+            throw new UnAuthenticatedException("User is not authenticated.");
         }
         if (userId == tokenUser.Id) // to prevent self-follow
         {
-            throw new Exception();
+            throw new BadRequestException("You cannot follow yourself.");
         }
         var followingUser = await _unitOfWork.Users.GetAsync(u => u.Id == userId);
         var followerUser = await _unitOfWork.Users.GetAsync(u => u.Id == tokenUser.Id);
         if (followingUser is null || followerUser is null)
         {
-            throw new Exception();
+            throw new BadRequestException("Following user not found.");
         }
         var existingFollow = await _unitOfWork.FollowersFollowings.GetAsync(ff => ff.FollowerId == followerUser.Id && ff.FollowingId == followingUser.Id);
         if (existingFollow != null)
         {
-            throw new Exception("You are already following this user.");
+            throw new BadRequestException("You already follow this user.");
         }
         _unitOfWork.FollowersFollowings.Add(new FollowerFollowing
         {
@@ -55,22 +56,22 @@ public class UserService : IUserService
         var tokenUser = GetAuthenticatedUser();
         if (tokenUser is null)
         {
-            throw new Exception();
+            throw new UnAuthenticatedException("User is not authenticated.");
         }
         if (userId == tokenUser.Id) // to prevent self-follow
         {
-            throw new Exception();
+            throw new BadRequestException("Users cannot unfollow themselves.");
         }
         var followingUser = await _unitOfWork.Users.GetAsync(u => u.Id == userId);
         var followerUser = await _unitOfWork.Users.GetAsync(u => u.Id == tokenUser.Id);
         if (followingUser is null || followerUser is null)
         {
-            throw new Exception();
+            throw new BadRequestException("Following user not found.");
         }
         var existingFollow = await _unitOfWork.FollowersFollowings.GetAsync(ff => ff.FollowerId == followerUser.Id && ff.FollowingId == followingUser.Id);
         if (existingFollow is null)
         {
-            throw new Exception("You are not following this user.");
+            throw new BadRequestException("You are not following this user.");
         }
         _unitOfWork.FollowersFollowings.Remove(existingFollow);
         followerUser.FollowingCount--;
@@ -103,7 +104,7 @@ public class UserService : IUserService
         var user = await _unitOfWork.Users.GetAsync(u => u.Id == userId);
         if (user is null)
         {
-            throw new Exception();
+            throw new BadRequestException("User not found.");
         }
 
         var followers = await _unitOfWork.FollowersFollowings.GetAllAsync(page, pageSize, ff => ff.FollowingId == userId, null, null, ["Follower.Avatar"]);
@@ -123,7 +124,7 @@ public class UserService : IUserService
         var user = await _unitOfWork.Users.GetAsync(u => u.Id == userId);
         if (user is null)
         {
-            throw new Exception();
+            throw new BadRequestException("User not found.");
         }
 
         var followings = await _unitOfWork.FollowersFollowings.GetAllAsync(page, pageSize, ff => ff.FollowerId == userId, null, null, ["Following.Avatar"]);

@@ -6,6 +6,7 @@ using SocialMedia.Application.Dtos;
 using SocialMedia.Application.ServiceContracts;
 using SocialMedia.Core.Entities;
 using SocialMedia.Core.Enumerations;
+using SocialMedia.Core.Exceptions;
 
 namespace SocialMedia.Application.Services;
 
@@ -29,7 +30,7 @@ public class PostService : IPostService
         var user = _userService.GetAuthenticatedUser();
         if (user == null)
         {
-            throw new Exception("User is not authenticated.");
+            throw new UnAuthenticatedException("User is not authenticated.");
         }
         var post = new Post
         {
@@ -79,16 +80,16 @@ public class PostService : IPostService
         var user = _userService.GetAuthenticatedUser();
         if (user == null)
         {
-            throw new Exception("User is not authenticated.");
+            throw new UnAuthenticatedException("User is not authenticated.");
         }
         var post = await _unitOfWork.Posts.GetAsync(p => p.Id == updatePostDto.PostId, ["Attachments"]);
         if (post == null)
         {
-            throw new Exception("Post not found.");
+            throw new BadRequestException("Post not found.");
         }
         if (user.Id != post.UserId)
         {
-            throw new Exception("You are not authorized to update this post.");
+            throw new UnAuthorizedException("User not authorized to update this post.");
         }
         // update the content of the post then delete all deleted attachments ids and insert any new attachments 
         if (updatePostDto.Content is not null) post.Content = updatePostDto.Content;
@@ -147,7 +148,7 @@ public class PostService : IPostService
         var user = await _unitOfWork.Users.GetAsync(u => u.Id == userId);
         if (user is null)
         {
-            throw new Exception();
+            throw new BadRequestException("User not found.");
         }
         var posts = await _unitOfWork.Posts.GetAllAsync(page, pageSize, p => p.UserId == userId, p => p.CreatedAt, "desc", ["Attachments"]);
         var postsCount = await _unitOfWork.Posts.CountAsync(p => p.UserId == userId);
@@ -172,7 +173,7 @@ public class PostService : IPostService
         var post = await _unitOfWork.Posts.GetAsync(p => p.Id == postId, ["Attachments", "User.Avatar"]);
         if (post is null)
         {
-            throw new Exception();
+            throw new BadRequestException("Post not found.");
         }
         var postComments = await _unitOfWork.Comments.GetAllAsync(1, commentPageSize, commentRepliesSize, postId);
         return new()

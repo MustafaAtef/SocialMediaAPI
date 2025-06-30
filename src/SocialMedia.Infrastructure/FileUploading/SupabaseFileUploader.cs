@@ -2,6 +2,7 @@ using System;
 using SocialMedia.Application.ServiceContracts;
 using Microsoft.AspNetCore.Http;
 using SocialMedia.Core.Enumerations;
+using SocialMedia.Core.Exceptions;
 
 namespace SocialMedia.Infrastructure.FileUploading;
 
@@ -19,7 +20,7 @@ public class SupabaseFileUploader : IFileUploader
     {
         if (file == null || file.Length == 0)
         {
-            throw new ArgumentException("No file uploaded.", nameof(file));
+            throw new BadRequestException("No file uploaded.");
         }
 
         var acceptedImageExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
@@ -35,7 +36,7 @@ public class SupabaseFileUploader : IFileUploader
         }
         else
         {
-            throw new ArgumentException("Invalid file format", nameof(file));
+            throw new BadRequestException("Invalid file format");
         }
     }
 
@@ -44,11 +45,11 @@ public class SupabaseFileUploader : IFileUploader
     {
         if (file is null || file.Length == 0)
         {
-            throw new ArgumentException("No image uploaded.", nameof(file));
+            throw new BadRequestException("No image uploaded.");
         }
         if (file.Length > 5 * 1024 * 1024)
         {
-            throw new ArgumentException("Image size exceeds the limit of 5 MB.", nameof(file));
+            throw new BadRequestException("Image size exceeds the limit of 5 MB.");
         }
         var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
         using var ms = new MemoryStream();
@@ -58,7 +59,7 @@ public class SupabaseFileUploader : IFileUploader
         var url = _supabaseClient.Storage.From(bucketName).GetPublicUrl(fileName);
         if (url is null)
         {
-            throw new Exception("Failed to upload image to Supabase.");
+            throw new BadRequestException("Failed to upload image to Supabase.");
         }
         return (StorageProvider.Supabase, AttachmentType.Image, url);
     }
@@ -67,11 +68,11 @@ public class SupabaseFileUploader : IFileUploader
     {
         if (file is null || file.Length == 0)
         {
-            throw new ArgumentException("No video uploaded.", nameof(file));
+            throw new BadRequestException("No video uploaded.");
         }
         if (file.Length > 20 * 1024 * 1024)
         {
-            throw new ArgumentException("Video size exceeds the limit of 20 MB.", nameof(file));
+            throw new BadRequestException("Video size exceeds the limit of 20 MB.");
         }
         var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
         using var ms = new MemoryStream();
@@ -81,7 +82,7 @@ public class SupabaseFileUploader : IFileUploader
         var url = _supabaseClient.Storage.From(bucketName).GetPublicUrl(fileName);
         if (url is null)
         {
-            throw new Exception("Failed to upload video to Supabase.");
+            throw new BadRequestException("Failed to upload video to Supabase.");
         }
         return (StorageProvider.Supabase, AttachmentType.Video, url);
     }

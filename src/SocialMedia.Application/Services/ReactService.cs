@@ -3,6 +3,7 @@ using EducationCenter.Core.RepositoryContracts;
 using SocialMedia.Application.Dtos;
 using SocialMedia.Application.ServiceContracts;
 using SocialMedia.Core.Entities;
+using SocialMedia.Core.Exceptions;
 
 namespace SocialMedia.Application.Service;
 
@@ -21,13 +22,13 @@ public class ReactService : IReactService
         var user = _userService.GetAuthenticatedUser();
         if (user == null)
         {
-            throw new UnauthorizedAccessException("User is not authenticated.");
+            throw new UnAuthenticatedException("User is not authenticated.");
         }
         // check if the post exists
         var post = await _unitOfWork.Posts.GetByIdAsync(reactToPostDto.PostId);
         if (post == null)
         {
-            throw new ArgumentException("Post not found.");
+            throw new BadRequestException("Post not found.");
         }
         // add the react to the post
 
@@ -73,17 +74,17 @@ public class ReactService : IReactService
         var user = _userService.GetAuthenticatedUser();
         if (user is null)
         {
-            throw new UnauthorizedAccessException("User is not authenticated.");
+            throw new UnAuthenticatedException("User is not authenticated.");
         }
         var post = await _unitOfWork.Posts.GetByIdAsync(reactToCommentDto.PostId);
         if (post is null)
         {
-            throw new ArgumentException("Post not found.");
+            throw new BadRequestException("Post not found.");
         }
         var comment = await _unitOfWork.Comments.GetByIdAsync(reactToCommentDto.CommentId);
         if (comment is null)
         {
-            throw new ArgumentException("Comment not found.");
+            throw new BadRequestException("Comment not found.");
         }
         var commentReact = await _unitOfWork.CommentReacts.GetAsync(cr => cr.CommentId == reactToCommentDto.CommentId && cr.UserId == user.Id);
         if (commentReact != null)
@@ -127,17 +128,21 @@ public class ReactService : IReactService
         var user = _userService.GetAuthenticatedUser();
         if (user is null)
         {
-            throw new UnauthorizedAccessException("User is not authenticated.");
+            throw new UnAuthenticatedException("User is not authenticated.");
         }
         var post = await _unitOfWork.Posts.GetByIdAsync(postId);
         if (post is null)
         {
-            throw new ArgumentException("Post not found.");
+            throw new BadRequestException("Post not found.");
         }
-        var postReact = await _unitOfWork.PostReacts.GetAsync(pr => pr.PostId == postId && pr.UserId == user.Id);
+        var postReact = await _unitOfWork.PostReacts.GetAsync(pr => pr.PostId == postId);
         if (postReact is null)
         {
-            throw new ArgumentException("React not found.");
+            throw new BadRequestException("React not found.");
+        }
+        if (postReact.UserId != user.Id)
+        {
+            throw new UnAuthorizedException("User is not authorized to remove this react.");
         }
         _unitOfWork.PostReacts.Remove(postReact);
         post.ReactionsCount--;
@@ -148,17 +153,17 @@ public class ReactService : IReactService
         var user = _userService.GetAuthenticatedUser();
         if (user is null)
         {
-            throw new UnauthorizedAccessException("User is not authenticated.");
+            throw new UnAuthenticatedException("User is not authenticated.");
         }
         var comment = await _unitOfWork.Comments.GetByIdAsync(commentId);
         if (comment is null)
         {
-            throw new ArgumentException("Comment not found.");
+            throw new BadRequestException("Comment not found.");
         }
         var commentReact = await _unitOfWork.CommentReacts.GetAsync(cr => cr.CommentId == commentId && cr.UserId == user.Id);
         if (commentReact is null)
         {
-            throw new ArgumentException("React not found.");
+            throw new BadRequestException("React not found.");
         }
         _unitOfWork.CommentReacts.Remove(commentReact);
         comment.ReactionsCount--;
@@ -170,7 +175,7 @@ public class ReactService : IReactService
         var post = await _unitOfWork.Posts.GetAsync(p => p.Id == postId);
         if (post is null)
         {
-            throw new Exception();
+            throw new BadRequestException("Post not found.");
         }
         var postReactions = await _unitOfWork.PostReacts.GetAllAsync(page, pageSize, pr => pr.PostId == postId, pr => pr.CreatedAt, "desc", ["User.Avatar"]);
         return new(post.ReactionsCount, pageSize, page, postReactions.Select(pr => new PostReactDto()
@@ -195,7 +200,7 @@ public class ReactService : IReactService
         var comment = await _unitOfWork.Comments.GetAsync(c => c.Id == commentId);
         if (comment is null)
         {
-            throw new Exception("Comment not found.");
+            throw new BadRequestException("Comment not found.");
         }
         var commentReactions = await _unitOfWork.CommentReacts.GetAllAsync(
             page,
@@ -205,7 +210,6 @@ public class ReactService : IReactService
             "desc",
             ["User.Avatar"]
         );
-
         return new PagedList<CommentReactDto>(
             comment.ReactionsCount,
             pageSize,

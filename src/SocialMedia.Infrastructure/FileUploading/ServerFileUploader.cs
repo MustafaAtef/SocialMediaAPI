@@ -3,7 +3,7 @@ using SocialMedia.Application.ServiceContracts;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Hosting;
 using SocialMedia.Core.Enumerations;
-using Microsoft.Identity.Client.Extensions.Msal;
+using SocialMedia.Core.Exceptions;
 namespace SocialMedia.Infrastructure.FileUploading;
 
 public class ServerFileUploader : IFileUploader
@@ -19,7 +19,7 @@ public class ServerFileUploader : IFileUploader
     {
         if (file == null || file.Length == 0)
         {
-            throw new ArgumentException("No file uploaded.", nameof(file));
+            throw new BadRequestException("No file uploaded.");
         }
 
         var acceptedImageExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
@@ -35,7 +35,7 @@ public class ServerFileUploader : IFileUploader
         }
         else
         {
-            throw new ArgumentException("Invalid file format", nameof(file));
+            throw new BadRequestException("Invalid file format. Only images and videos are allowed.");
         }
     }
     private async Task<(StorageProvider, AttachmentType, string)> _uploadImageAsync(IFormFile file, string folderName)
@@ -43,11 +43,11 @@ public class ServerFileUploader : IFileUploader
 
         if (file is null || file.Length == 0)
         {
-            throw new ArgumentException("No image uploaded.", nameof(file));
+            throw new BadRequestException("No image uploaded.");
         }
         if (file.Length > 10 * 1024 * 1024)
         {
-            throw new ArgumentException("Image size exceeds the limit of 10 MB.", nameof(file));
+            throw new BadRequestException("Image size exceeds the limit of 10 MB.");
         }
 
         var wwwrootPath = _webHostEnvironment.WebRootPath;
@@ -71,11 +71,11 @@ public class ServerFileUploader : IFileUploader
     {
         if (file is null || file.Length == 0)
         {
-            throw new ArgumentException("No video uploaded.", nameof(file));
+            throw new BadRequestException("No video uploaded.");
         }
         if (file.Length > 20 * 1024 * 1024)
         {
-            throw new ArgumentException("Video size exceeds the limit of 20 MB.", nameof(file));
+            throw new BadRequestException("Video size exceeds the limit of 20 MB.");
         }
         var wwwrootPath = _webHostEnvironment.WebRootPath;
         var basePath = folderName != "" ? Path.Combine(wwwrootPath, "uploads", folderName, "videos") : Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "videos");

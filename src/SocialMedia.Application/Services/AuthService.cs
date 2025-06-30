@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Http;
 
 using Microsoft.Extensions.Configuration;
 using SocialMedia.Core.Enumerations;
+using SocialMedia.Core.Exceptions;
 
 namespace SocialMedia.Application.Services;
 
@@ -37,7 +38,7 @@ public class AuthService : IAuthService
         var user = await _unitOfWork.Users.GetAsync(u => u.Email == registerRequest.Email);
         if (user != null)
         {
-            throw new Exception("User already exists with this email.");
+            throw new UniqueException("User already exists with this email.");
         }
         var newUser = new User
         {
@@ -93,7 +94,7 @@ public class AuthService : IAuthService
         if (user == null || !_passwordHasher.VerifyPassword(loginRequest.Password, user.Password))
         {
 
-            throw new Exception("Invalid email or password.");
+            throw new BadRequestException("Invalid email or password.");
         }
 
         JwtDto jwtData = _jwtService.GenerateToken(user);
@@ -122,13 +123,13 @@ public class AuthService : IAuthService
         var userClaims = _jwtService.ValidateJwt(refreshTokenRequest.Token);
         if (userClaims == null)
         {
-            throw new Exception("Invalid refresh token.");
+            throw new BadRequestException("Invalid refresh token.");
         }
         var userId = int.Parse(userClaims.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "-1");
         var user = await _unitOfWork.Users.GetAsync(u => u.Id == userId, ["Avatar"]);
         if (user == null || user.RefreshToken != refreshTokenRequest.RefreshToken || user.RefreshTokenExpiryTime < DateTime.Now)
         {
-            throw new Exception("Invalid refresh token.");
+            throw new BadRequestException("Invalid refresh token.");
         }
         JwtDto jwtData = _jwtService.GenerateToken(user);
         user.RefreshToken = jwtData.RefreshToken;
@@ -154,16 +155,16 @@ public class AuthService : IAuthService
         var userId = int.Parse(_httpContextAccessor.HttpContext?.User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "");
         if (userId <= 0)
         {
-            throw new Exception("User not authenticated.");
+            throw new UnAuthenticatedException("User not authenticated.");
         }
         var user = await _unitOfWork.Users.GetAsync(u => u.Id == userId);
         if (user == null)
         {
-            throw new Exception("User not found.");
+            throw new BadRequestException("User not found.");
         }
         if (_passwordHasher.VerifyPassword(changePasswordRequestDto.OldPassword, user.Password) == false)
         {
-            throw new Exception("Old password is incorrect.");
+            throw new BadRequestException("Old password is incorrect.");
         }
         user.Password = _passwordHasher.HashPassword(changePasswordRequestDto.NewPassword);
         await _unitOfWork.SaveChangesAsync();
@@ -174,7 +175,7 @@ public class AuthService : IAuthService
         var user = await _unitOfWork.Users.GetAsync(u => u.Email == forgetPasswordRequestDto.Email);
         if (user == null)
         {
-            throw new Exception("User not found.");
+            throw new BadRequestException("User not found.");
         }
 
         var token = _randomToken();
@@ -199,7 +200,7 @@ public class AuthService : IAuthService
         var user = await _unitOfWork.Users.GetAsync(u => u.PasswordResetToken == resetPasswordRequestDto.Token);
         if (user == null || user.PasswordResetTokenExpiryTime < DateTime.Now)
         {
-            throw new Exception("Invalid or expired password reset token.");
+            throw new BadRequestException("Invalid or expired password reset token.");
         }
         user.Password = _passwordHasher.HashPassword(resetPasswordRequestDto.NewPassword);
         user.PasswordResetToken = null;
@@ -213,11 +214,11 @@ public class AuthService : IAuthService
         var user = await _unitOfWork.Users.GetAsync(u => u.Email == emailVerificationRequest.Email);
         if (user == null)
         {
-            throw new Exception("User not found.");
+            throw new BadRequestException("User not found.");
         }
         if (user.IsEmailVerified)
         {
-            throw new Exception("Email is already verified.");
+            throw new BadRequestException("Email is already verified.");
         }
 
         user.EmailVerificationToken = _randomToken();
