@@ -28,4 +28,8 @@ public class User
     public ICollection<CommentReact> CommentReacts { get; set; } = new List<CommentReact>();
     public ICollection<FollowerFollowing> Followers { get; set; } = new List<FollowerFollowing>();
     public ICollection<FollowerFollowing> Followings { get; set; } = new List<FollowerFollowing>();
+    public ICollection<UserConnection> UserConnections { get; set; } = new List<UserConnection>();
+    public ICollection<Group> Groups { get; set; } = new List<Group>();
+    public ICollection<Message> SentMessages { get; set; } = new List<Message>();
+    public ICollection<MessageStatus>? MessageStatuses { get; set; }
 }

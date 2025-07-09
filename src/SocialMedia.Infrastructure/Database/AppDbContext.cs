@@ -85,6 +85,21 @@ public class AppDbContext : DbContext
             entity.Property(cr => cr.CreatedAt).HasDefaultValueSql("GETDATE()");
         });
 
+        modelBuilder.Entity<UserConnection>(entity =>
+        {
+            entity.HasKey(p => new { p.UserId, p.ConnectionId });
+        });
+
+        modelBuilder.Entity<Message>(entity =>
+        {
+            entity.HasOne(m => m.FromUser).WithMany(u => u.SentMessages).HasForeignKey(m => m.FromId).OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<MessageStatus>(entity =>
+        {
+            entity.HasKey(e => new { e.MessageId, e.RecieverId });
+            entity.HasOne(e => e.Message).WithMany(m => m.MessageStatuses).HasForeignKey(e => e.MessageId);
+            entity.HasOne(e => e.Reciever).WithMany(u => u.MessageStatuses).HasForeignKey(e => e.RecieverId);
+        });
     }
     public DbSet<User> Users { get; set; } = null!;
     public DbSet<Post> Posts { get; set; } = null!;

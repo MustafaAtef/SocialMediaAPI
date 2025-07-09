@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using SocialMedia.Application.Service;
 using SocialMedia.WebApi.Middlewares;
+using SocialMedia.WebApi.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,7 +20,7 @@ builder.Services.AddDatabase(builder.Configuration);
 builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("jwt"));
 builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("email"));
 builder.Services.AddHttpContextAccessor();
-
+builder.Services.AddSignalR();
 
 builder.Services.AddTransient<IAuthService, AuthService>();
 builder.Services.AddTransient<IPasswordHasher, PasswordHasher>();
@@ -66,9 +67,7 @@ builder.Services.AddAuthentication().AddJwtBearer(JwtBearerDefaults.Authenticati
 var app = builder.Build();
 
 app.UseGlobalErrorHandling();
-
 app.UseStaticFiles();
-
 app.MapControllers();
-
+app.MapHub<ChatHub>("/chat");
 app.Run();
