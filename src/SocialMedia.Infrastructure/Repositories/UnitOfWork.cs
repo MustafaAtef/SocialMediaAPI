@@ -20,6 +20,8 @@ public class UnitOfWork : IUnitOfWork
     private IPostReactRepository? _postReacts = null;
     private ICommentReactRepository? _commentReacts = null;
     private IFollowerFollowingRepository? _followersFollowings = null;
+    private IUserConnectionRepository? _userConnections = null;
+    private IGroupRepository? _groups = null;
 
     public IUserRepository Users
     {
@@ -77,6 +79,24 @@ public class UnitOfWork : IUnitOfWork
             if (_followersFollowings == null)
                 _followersFollowings = new FollowerFollowingRepository(_appDbContext);
             return _followersFollowings;
+        }
+    }
+    public IUserConnectionRepository UserConnections
+    {
+        get
+        {
+            if (_userConnections == null)
+                _userConnections = new UserConnectionRepository(_appDbContext);
+            return _userConnections;
+        }
+    }
+    public IGroupRepository Groups
+    {
+        get
+        {
+            if (_groups == null)
+                _groups = new GroupRepository(_appDbContext);
+            return _groups;
         }
     }
     public void Dispose()

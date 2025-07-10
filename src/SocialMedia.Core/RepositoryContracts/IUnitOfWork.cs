@@ -12,6 +12,10 @@ public interface IUnitOfWork : IDisposable
     IPostReactRepository PostReacts { get; }
     ICommentReactRepository CommentReacts { get; }
     IFollowerFollowingRepository FollowersFollowings { get; }
+    IUserConnectionRepository UserConnections { get; }
+    IGroupRepository Groups { get; }
+
+
     Task SaveChangesAsync();
 
 }

@@ -79,9 +79,12 @@ public class UserService : IUserService
         await _unitOfWork.SaveChangesAsync();
     }
 
-    public UserDto? GetAuthenticatedUser()
+    public UserDto? GetAuthenticatedUser(ClaimsPrincipal? claimsPrincipal = null)
     {
-        var principal = _httpContextAccessor.HttpContext.User;
+        ClaimsPrincipal? principal;
+        if (claimsPrincipal is null)
+            principal = _httpContextAccessor.HttpContext.User;
+        else principal = claimsPrincipal;
         var id = principal?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
         var email = principal?.FindFirst(ClaimTypes.Email)?.Value;
         var name = principal?.FindFirst("name")?.Value;

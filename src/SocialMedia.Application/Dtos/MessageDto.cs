@@ -1,17 +1,26 @@
 using System;
+using SocialMedia.Core.Enumerations;
 
 namespace SocialMedia.Application.Dtos;
 
-public class FirstDirectMessageDto
+public class CreateFirstDirectMessageDto
 {
-    public int FromId { get; set; }
     public int ToId { get; set; }
+    public string Message { get; set; }
+}
+
+public class CreateDirectMessageDto
+{
+    public Guid GroupId { get; set; }
     public string Message { get; set; }
 }
 
 public class DirectMessageDto
 {
-    public int GroupId { get; set; }
-    public int FromId { get; set; }
-    public string Message { get; set; }
+    public int Id { get; set; }
+    public Guid GroupId { get; set; }
+    public UserDto FromUser { get; set; }
+    public MessageStatusType StatusType { get; set; }
+    public string Status { get; set; }
+
 }
