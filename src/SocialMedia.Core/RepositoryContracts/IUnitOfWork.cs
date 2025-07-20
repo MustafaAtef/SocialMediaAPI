@@ -15,6 +15,7 @@ public interface IUnitOfWork : IDisposable
     IUserConnectionRepository UserConnections { get; }
     IGroupRepository Groups { get; }
 
+    IMessageRepository Messages { get; }
 
     Task SaveChangesAsync();
 

@@ -93,6 +93,8 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Message>(entity =>
         {
             entity.HasOne(m => m.FromUser).WithMany(u => u.SentMessages).HasForeignKey(m => m.FromId).OnDelete(DeleteBehavior.Restrict);
+            entity.Property(p => p.CreatedAt).HasDefaultValueSql("GETDATE()");
+
         });
         modelBuilder.Entity<MessageStatus>(entity =>
         {

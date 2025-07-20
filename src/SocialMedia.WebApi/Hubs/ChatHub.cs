@@ -1,4 +1,3 @@
-using System.Threading.Tasks;
 using EducationCenter.Core.RepositoryContracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -9,7 +8,6 @@ using SocialMedia.Core.Enumerations;
 
 namespace SocialMedia.WebApi.Hubs;
 
-[Authorize]
 public class ChatHub : Hub
 {
     private readonly IUnitOfWork _unitOfWork;
@@ -22,20 +20,29 @@ public class ChatHub : Hub
     public override async Task OnConnectedAsync()
     {
         var tokenUser = _userService.GetAuthenticatedUser(Context.User);
-        if (tokenUser == null) throw new Exception();
-        var user = await _unitOfWork.Users.GetAsync(u => u.Id == tokenUser.Id, ["Groups"]);
-        if (user is null) throw new Exception();
+        if (tokenUser == null) throw new HubException("Not authenticated user");
+        var user = await _unitOfWork.Users.GetAsync(u => u.Id == tokenUser.Id, ["Groups", "UserConnections"]);
+        if (user is null) throw new HubException("User not found.");
+        bool userFirstConnection = user.UserConnections.Count == 0;
         _unitOfWork.UserConnections.Add(new()
         {
             ConnectionId = Context.ConnectionId,
             UserId = tokenUser.Id
         });
+        await _unitOfWork.SaveChangesAsync();
+        // send to all groups that that connected user has connected and update all sent messages to delivered (if it's the first connection)
+        if (userFirstConnection)
+            await _unitOfWork.Users.UpdateSentMessagesToDelivered(tokenUser.Id);
         foreach (var group in user.Groups)
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, group.Id.ToString());
+            if (userFirstConnection)
+                await Clients.Group(group.Id.ToString()).SendAsync("DeliveredMessages", new DeliveredMessagesDto()
+                {
+                    GroudId = group.Id,
+                    RecieverId = user.Id
+                });
         }
-        await _unitOfWork.SaveChangesAsync();
-        await _unitOfWork.Users.UpdateSentMessagesToDelivered(tokenUser.Id);
     }
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
@@ -49,29 +56,28 @@ public class ChatHub : Hub
         await _unitOfWork.SaveChangesAsync();
     }
 
-    public async Task SendDirectMessage(CreateDirectMessageDto createDirectMessageDto)
+    public async Task SendDirectMessage(SendDirectMessageDto SendDirectMessageDto)
     {
         var tokenUser = _userService.GetAuthenticatedUser(Context.User);
-        if (tokenUser is null) throw new Exception();
-        var group = await _unitOfWork.Groups.GetAsync(g => g.Id == createDirectMessageDto.GroupId, ["Users.UserConnections"]);
-        if (group is null) throw new Exception();
-        await _saveAndBroadcastDirectMessage(group, tokenUser, createDirectMessageDto.Message);
+        if (tokenUser is null) throw new HubException("Not authenticated user.");
+        var group = await _unitOfWork.Groups.GetAsync(g => g.Id == SendDirectMessageDto.GroupId, ["Users.UserConnections", "Users.Avatar"]);
+        if (group is null) throw new HubException("Group not found.");
+        await _saveAndBroadcastMessage(group, tokenUser, SendDirectMessageDto.Message);
     }
-    public async Task SendFirstDirectMessage(CreateFirstDirectMessageDto createFirstDirectMessageDto)
+    public async Task SendFirstDirectMessage(SendFirstDirectMessageDto SendFirstDirectMessageDto)
     {
         var tokenUser = _userService.GetAuthenticatedUser(Context.User);
-        if (tokenUser is null) throw new Exception();
-        var reciever = await _unitOfWork.Users.GetAsync(u => u.Id == createFirstDirectMessageDto.ToId, ["UserConnections"]);
-        if (reciever is null) throw new Exception();
+        if (tokenUser is null) throw new HubException("Not authenticated user.");
+        var sender = await _unitOfWork.Users.GetAsync(u => u.Id == tokenUser.Id);
+        var reciever = await _unitOfWork.Users.GetAsync(u => u.Id == SendFirstDirectMessageDto.ToId, ["UserConnections", "Avatar"]);
+        if (reciever is null) throw new HubException("Reciever not found.");
         var group = new Group
         {
             Type = GroupType.Direct,
             Users = new List<User>()
             {
                 reciever,
-                new User {
-                    Id = tokenUser.Id
-                }
+                sender
             }
         };
         _unitOfWork.Groups.Add(group);
@@ -84,10 +90,17 @@ public class ChatHub : Hub
                 await Groups.AddToGroupAsync(con.ConnectionId, group.Id.ToString());
             }
         }
-        await _saveAndBroadcastDirectMessage(group, tokenUser, createFirstDirectMessageDto.Message);
+        await _saveAndBroadcastMessage(group, tokenUser, SendFirstDirectMessageDto.Message);
 
     }
-    private async Task _saveAndBroadcastDirectMessage(Group group, UserDto tokenUser, string message)
+
+    public async Task ReadMessagesInGroup(ReadMessagesInGroupDto readMessagesInGroupDto)
+    {
+        await _unitOfWork.Users.UpdateDeliveredMessagesToSeen(readMessagesInGroupDto.RecieverId, readMessagesInGroupDto.GroupId);
+        await Clients.Group(readMessagesInGroupDto.GroupId.ToString()).SendAsync("SeenMessages", readMessagesInGroupDto);
+    }
+
+    private async Task _saveAndBroadcastMessage(Group group, UserDto tokenUser, string message)
     {
         var msg = new Message
         {
@@ -95,34 +108,41 @@ public class ChatHub : Hub
             Data = message,
             MessageStatuses = new List<MessageStatus>()
         };
-        bool isOnline = false;
         foreach (var user in group.Users)
         {
             if (user.Id == tokenUser.Id) continue;
-            isOnline = user.UserConnections.Count > 0;
             msg.MessageStatuses.Add(new()
             {
                 SentAt = DateTime.Now,
                 DeliveredAt = DateTime.Now,
                 Reciever = user,
-                Status = MessageStatusType.Delivered
+                Status = user.UserConnections.Count > 0 ? MessageStatusType.Delivered : MessageStatusType.Sent
             });
         }
         group.Messages.Add(msg);
         await _unitOfWork.SaveChangesAsync();
-        await Clients.Groups(group.Id.ToString()).SendAsync("NewDirectMessage", new DirectMessageDto
+        await Clients.Groups(group.Id.ToString()).SendAsync("NewMessage", new MessageDto
         {
             Id = msg.Id,
             GroupId = group.Id,
-            FromUser = new UserDto
+            SentBy = tokenUser,
+            Message = message,
+            CreatedAt = msg.CreatedAt,
+            Status = msg.MessageStatuses.Select(ms => new MessageStatusDto
             {
-                Id = tokenUser.Id,
-                Name = tokenUser.Name,
-                Email = tokenUser.Email,
-                AvatarUrl = tokenUser.AvatarUrl
-            },
-            StatusType = isOnline ? MessageStatusType.Delivered : MessageStatusType.Sent,
-            Status = isOnline ? MessageStatusType.Delivered.ToString() : MessageStatusType.Sent.ToString()
+                RecievedBy = new UserDto()
+                {
+                    Id = ms.Reciever.Id,
+                    Name = ms.Reciever.FirstName + " " + ms.Reciever.LastName,
+                    Email = ms.Reciever.Email,
+                    AvatarUrl = ms.Reciever.Avatar?.Url ?? ""
+                },
+                StatusType = ms.Status,
+                Status = ms.Status.ToString(),
+                SentAt = ms.SentAt,
+                DeliveredAt = ms.DeliveredAt,
+                SeenAt = ms.SeenAt
+            }).ToList()
         });
     }
 }

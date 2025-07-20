@@ -62,24 +62,38 @@ builder.Services.AddAuthentication().AddJwtBearer(JwtBearerDefaults.Authenticati
         // The default value of ClockSkew is 5 minutes. That means if you haven't set it, your token will be still valid for up to 5 minutes. If you want to expire your token on the exact time; you'd need to set ClockSkew to zero
         ClockSkew = TimeSpan.Zero,
     };
-    options.Events.OnMessageReceived = context =>
+    options.Events = new JwtBearerEvents
     {
-        var accessToken = context.Request.Query["access_token"];
-        // If the request is for SignalR hub
-        var path = context.HttpContext.Request.Path;
-        if (!string.IsNullOrEmpty(accessToken) &&
-            path.StartsWithSegments("/hubs"))
-        {
-            context.Token = accessToken;
-        }
-        return Task.CompletedTask;
+        OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                // If the request is for SignalR hub
+                var path = context.HttpContext.Request.Path;
+                if (!string.IsNullOrEmpty(accessToken) &&
+                    path.StartsWithSegments("/hubs"))
+                {
+                    context.Token = accessToken;
+                }
+                return Task.CompletedTask;
+            }
     };
+});
+
+builder.Services.AddCors(builder =>
+{
+    builder.AddDefaultPolicy(policyBuilder =>
+    {
+        policyBuilder.WithOrigins("http://127.0.0.1:5500")
+            .AllowAnyHeader()
+            .AllowAnyMethod().AllowCredentials();
+    });
 });
 
 var app = builder.Build();
 
 app.UseGlobalErrorHandling();
 app.UseStaticFiles();
+app.UseCors();
 app.MapControllers();
 app.MapHub<ChatHub>("/hubs/chat");
 app.Run();

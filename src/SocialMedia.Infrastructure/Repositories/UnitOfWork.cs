@@ -22,6 +22,7 @@ public class UnitOfWork : IUnitOfWork
     private IFollowerFollowingRepository? _followersFollowings = null;
     private IUserConnectionRepository? _userConnections = null;
     private IGroupRepository? _groups = null;
+    private IMessageRepository? _messages = null;
 
     public IUserRepository Users
     {
@@ -97,6 +98,15 @@ public class UnitOfWork : IUnitOfWork
             if (_groups == null)
                 _groups = new GroupRepository(_appDbContext);
             return _groups;
+        }
+    }
+    public IMessageRepository Messages
+    {
+        get
+        {
+            if (_messages == null)
+                _messages = new MessageRepository(_appDbContext);
+            return _messages;
         }
     }
     public void Dispose()

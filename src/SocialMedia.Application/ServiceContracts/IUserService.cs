@@ -11,5 +11,6 @@ public interface IUserService
     Task UnFollowAsync(int userId);
     Task<PagedList<UserDto>> GetPagedFollowersAsync(int userId, int page, int pageSize);
     Task<PagedList<UserDto>> GetPagedFollowingsAsync(int userId, int page, int pageSize);
-
+    Task<ICollection<GroupMessagesDto>> GetAllGroupMessagesAsync(int lastMessagesSize);
+    Task<GroupMessagesDto> GetPagedGroupMessagesAsync(Guid groupId, int? lastMessageId, int olderMessagesSize);
 }

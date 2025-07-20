@@ -50,5 +50,19 @@ namespace SocialMedia.WebApi.Controllers
             return await _postService.GetPagedPostsAsync(userId, page, pageSize);
         }
 
+        [HttpGet("/messages")]
+        public async Task<ActionResult<ICollection<GroupMessagesDto>>> GetAllGroupsMessages(int olderMessagesSize = 25)
+        {
+            var messages = await _userService.GetAllGroupMessagesAsync(olderMessagesSize);
+            return Ok(messages);
+        }
+
+        [HttpGet("/messages/groups/{groupId}")]
+        public async Task<ActionResult<ICollection<GroupMessagesDto>>> GetGroupMessages(Guid groupId, int? lastMessageId, int olderMessagesSize = 25)
+        {
+            var messages = await _userService.GetPagedGroupMessagesAsync(groupId, lastMessageId, olderMessagesSize);
+            return Ok(messages);
+        }
+
     }
 }

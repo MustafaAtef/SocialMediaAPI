@@ -9,6 +9,7 @@ public class Group
     public string? Name { get; set; }
     public GroupType Type { get; set; }
     public DateTime CreatedAT { get; set; }
+    public int TotalMessages { get; set; }
     public ICollection<User> Users { get; set; } = new List<User>();
     public ICollection<Message> Messages { get; set; } = new List<Message>();
 }
