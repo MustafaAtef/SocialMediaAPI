@@ -5,6 +5,7 @@ using MailKit.Security;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using MimeKit.Text;
+using SocialMedia.Application.Dtos;
 
 namespace SocialMedia.Infrastructure.Email;
 
@@ -16,23 +17,21 @@ public class EmailService : IEmailService
     {
         _emailOptions = emailOptions.Value;
     }
-    public async Task SendEmailVerificationAsync(string toEmail, string token, DateTime tokenExpiration)
+    public async Task SendEmailAsync(EmailDto emailDto)
     {
         var email = new MimeMessage();
         email.From.Add(MailboxAddress.Parse(_emailOptions.From));
-        email.To.Add(MailboxAddress.Parse(toEmail));
-        email.Subject = "Activate Your Account";
-        email.Body = new TextPart(TextFormat.Html) { Text = EmailTemplate.ActivateTemplate(_emailOptions.EmailVerificationUrl + token, tokenExpiration) };
-        await _sendEmail(email);
-    }
-
-    public async Task SendPasswordResetAsync(string toEmail, string token, DateTime tokenExpiration)
-    {
-        var email = new MimeMessage();
-        email.From.Add(MailboxAddress.Parse(_emailOptions.From));
-        email.To.Add(MailboxAddress.Parse(toEmail));
-        email.Subject = "Reset Passowrd";
-        email.Body = new TextPart(TextFormat.Html) { Text = EmailTemplate.ResetPasswordTemplate(_emailOptions.PasswordResetUrl + token, tokenExpiration) };
+        email.To.Add(MailboxAddress.Parse(emailDto.User.Email));
+        if (emailDto.Type == EmailType.Verification)
+        {
+            email.Subject = "Activate Your Account";
+            email.Body = new TextPart(TextFormat.Html) { Text = EmailTemplate.ActivateTemplate(_emailOptions.EmailVerificationUrl + emailDto.User.EmailVerificationToken, emailDto.User.EmailVerificationTokenExpiryTime.Value) };
+        }
+        else if (emailDto.Type == EmailType.ForgetPassword)
+        {
+            email.Subject = "Reset Passowrd";
+            email.Body = new TextPart(TextFormat.Html) { Text = EmailTemplate.ResetPasswordTemplate(_emailOptions.PasswordResetUrl + emailDto.User.PasswordResetToken, emailDto.User.PasswordResetTokenExpiryTime.Value) };
+        }
         await _sendEmail(email);
     }
 

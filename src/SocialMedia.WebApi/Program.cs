@@ -21,16 +21,17 @@ builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection("jwt"));
 builder.Services.Configure<EmailOptions>(builder.Configuration.GetSection("email"));
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSignalR();
+builder.Services.AddSingleton<IEmailProcessorQueue, EmailProcessorQueue>();
 
-builder.Services.AddTransient<IAuthService, AuthService>();
-builder.Services.AddTransient<IPasswordHasher, PasswordHasher>();
-builder.Services.AddTransient<IJwtService, JwtService>();
-builder.Services.AddTransient<IEmailService, EmailService>();
-builder.Services.AddTransient<IFileUploader, ServerFileUploader>();
-builder.Services.AddTransient<IPostService, PostService>();
-builder.Services.AddTransient<ICommentService, CommentService>();
-builder.Services.AddTransient<IReactService, ReactService>();
-builder.Services.AddTransient<IUserService, UserService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
+builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IFileUploader, ServerFileUploader>();
+builder.Services.AddScoped<IPostService, PostService>();
+builder.Services.AddScoped<ICommentService, CommentService>();
+builder.Services.AddScoped<IReactService, ReactService>();
+builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 builder.Services.AddScoped<Supabase.Client>(_ => new Supabase.Client(
@@ -88,6 +89,8 @@ builder.Services.AddCors(builder =>
             .AllowAnyMethod().AllowCredentials();
     });
 });
+
+builder.Services.AddHostedService<EmailProcessorService>();
 
 var app = builder.Build();
 

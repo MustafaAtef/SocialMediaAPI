@@ -1,4 +1,3 @@
-using System;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using EducationCenter.Core.RepositoryContracts;
@@ -8,7 +7,6 @@ using SocialMedia.Core.Entities;
 using Microsoft.AspNetCore.Http;
 
 using Microsoft.Extensions.Configuration;
-using SocialMedia.Core.Enumerations;
 using SocialMedia.Core.Exceptions;
 
 namespace SocialMedia.Application.Services;
@@ -19,16 +17,16 @@ public class AuthService : IAuthService
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtService _jwtService;
     private readonly IHttpContextAccessor _httpContextAccessor;
-    private readonly IEmailService _emailService;
     private readonly IConfiguration _configuration;
     private readonly IFileUploader _fileUploader;
-    public AuthService(IUnitOfWork unitOfWork, IPasswordHasher passwordHasher, IJwtService jwtService, IHttpContextAccessor httpContextAccessor, IEmailService emailService, IConfiguration configuration, IFileUploader fileUploader)
+    private readonly IEmailProcessorQueue _emailProcessorQueue;
+    public AuthService(IUnitOfWork unitOfWork, IPasswordHasher passwordHasher, IJwtService jwtService, IHttpContextAccessor httpContextAccessor, IEmailProcessorQueue emailProcessorQueue, IConfiguration configuration, IFileUploader fileUploader)
     {
         _unitOfWork = unitOfWork;
         _passwordHasher = passwordHasher;
         _jwtService = jwtService;
         _httpContextAccessor = httpContextAccessor;
-        _emailService = emailService;
+        _emailProcessorQueue = emailProcessorQueue;
         _configuration = configuration;
         _fileUploader = fileUploader;
     }
@@ -66,11 +64,12 @@ public class AuthService : IAuthService
         _unitOfWork.Users.Add(newUser);
         await _unitOfWork.SaveChangesAsync();
 
-        // bottelneck here because sending the email will block the regesteration response until the email is sent
-        // a better approach would be to use a background service or a message queue to send the email asynchronously
-        // but for simplicity we will keep it synchronous for now
-
-        //await _emailService.SendEmailVerificationAsync(newUser.Email, newUser.EmailVerificationToken, newUser.EmailVerificationTokenExpiryTime.Value);
+        // [SOLVED] bottelneck here because sending the email will block the regesteration response until the email is sent
+        // [APPLIED] a better approach would be to use a background service with a message queue to send the email in background seperate from the request pipeline
+        var cts = new CancellationTokenSource();
+        cts.CancelAfter(TimeSpan.FromSeconds(10));
+        var success = await _emailProcessorQueue.WriteAsync(new EmailDto { User = newUser, Type = EmailType.Verification }, cts.Token);
+        if (!success) throw new BadRequestException("Server is busy now try again later!");
 
         return new AuthenticatedUserDto
         {
@@ -183,8 +182,10 @@ public class AuthService : IAuthService
         user.PasswordResetTokenExpiryTime = DateTime.Now.AddMinutes(_configuration["PasswordResetTokenExpiryMinutes"] != null ? int.Parse(_configuration["PasswordResetTokenExpiryMinutes"] ?? "") : 15);
         await _unitOfWork.SaveChangesAsync();
 
-        // Send email with reset password link
-        await _emailService.SendPasswordResetAsync(user.Email, token, user.PasswordResetTokenExpiryTime.Value);
+        var cts = new CancellationTokenSource();
+        cts.CancelAfter(TimeSpan.FromSeconds(10));
+        var success = await _emailProcessorQueue.WriteAsync(new EmailDto { User = user, Type = EmailType.ForgetPassword }, cts.Token);
+        if (!success) throw new BadRequestException("Server is busy now try again later!");
     }
     public async Task<bool> IsPasswordResetTokenValidAsync(string token)
     {
@@ -224,7 +225,10 @@ public class AuthService : IAuthService
         user.EmailVerificationToken = _randomToken();
         user.EmailVerificationTokenExpiryTime = DateTime.Now.AddMinutes(_configuration["EmailVerificationTokenExpiryMinutes"] != null ? int.Parse(_configuration["EmailVerificationTokenExpiryMinutes"] ?? "") : 15);
         await _unitOfWork.SaveChangesAsync();
-        await _emailService.SendEmailVerificationAsync(user.Email, user.EmailVerificationToken, user.EmailVerificationTokenExpiryTime.Value);
+        var cts = new CancellationTokenSource();
+        cts.CancelAfter(TimeSpan.FromSeconds(10));
+        var success = await _emailProcessorQueue.WriteAsync(new EmailDto { User = user, Type = EmailType.Verification }, cts.Token);
+        if (!success) throw new BadRequestException("Server is busy now try again later!");
     }
 
     public async Task<bool> VerifyEmailAsync(string token)
