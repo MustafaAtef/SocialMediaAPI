@@ -56,6 +56,7 @@ public class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
             entity.Property(p => p.CreatedAt).HasDefaultValueSql("GETDATE()");
             entity.Property(p => p.UpdatedAt).HasDefaultValueSql("GETDATE()");
+            entity.HasQueryFilter(p => !p.IsDeleted);
         });
         modelBuilder.Entity<Comment>(entity =>
         {

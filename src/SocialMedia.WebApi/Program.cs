@@ -12,6 +12,8 @@ using Microsoft.IdentityModel.Tokens;
 using SocialMedia.Application.Service;
 using SocialMedia.WebApi.Middlewares;
 using SocialMedia.WebApi.Hubs;
+using Microsoft.OpenApi.Models;
+using SocialMedia.WebApi.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +30,7 @@ builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IFileUploader, ServerFileUploader>();
+builder.Services.AddScoped<SupabaseFileUploader>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IReactService, ReactService>();
@@ -84,19 +87,42 @@ builder.Services.AddCors(builder =>
 {
     builder.AddDefaultPolicy(policyBuilder =>
     {
-        policyBuilder.WithOrigins("http://127.0.0.1:5500")
+        policyBuilder
+            .AllowAnyOrigin()
             .AllowAnyHeader()
-            .AllowAnyMethod().AllowCredentials();
+            .AllowAnyMethod();
     });
 });
 
 builder.Services.AddHostedService<EmailProcessorService>();
+builder.Services.AddSwaggerGen(c =>
+{
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT",
+        In = ParameterLocation.Header,
+        Description = "Enter your JWT token."
+    });
 
+    // Add operation filter to apply security only to endpoints with [Authorize] attribute
+    c.OperationFilter<AuthorizeCheckOperationFilter>();
+    c.AddSignalRSwaggerGen();
+});
 var app = builder.Build();
 
 app.UseGlobalErrorHandling();
 app.UseStaticFiles();
 app.UseCors();
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "SocialMediaAPI v1"));
+}
+app.UseAuthentication();
+app.UseAuthorization();
 app.MapControllers();
 app.MapHub<ChatHub>("/hubs/chat");
 app.Run();

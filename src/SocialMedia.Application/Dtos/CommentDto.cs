@@ -39,7 +39,7 @@ public class CommentDto
     public int RepliesCount { get; set; }
     public PagedList<CommentWithoutRepliesDto>? Replies { get; set; }
     public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 }
 
 public class CommentWithoutRepliesDto
@@ -52,6 +52,6 @@ public class CommentWithoutRepliesDto
     public int ReactsCount { get; set; }
 
     public DateTime CreatedAt { get; set; }
-    public DateTime UpdatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
 }
 

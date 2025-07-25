@@ -114,7 +114,7 @@ public class UnitOfWork : IUnitOfWork
         _appDbContext.Dispose();
     }
 
-    public Task SaveChangesAsync()
+    public Task<int> SaveChangesAsync()
     {
         return _appDbContext.SaveChangesAsync();
     }

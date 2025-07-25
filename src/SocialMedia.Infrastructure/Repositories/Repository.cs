@@ -105,4 +105,8 @@ public class Repository<TEntity> : IRepository<TEntity> where TEntity : class
         _dbContext.Update(entity);
     }
 
+    public void RemoveRange(IEnumerable<TEntity> entities)
+    {
+        _dbContext.RemoveRange(entities);
+    }
 }

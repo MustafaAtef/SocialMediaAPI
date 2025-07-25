@@ -62,7 +62,6 @@ public class CommentService : ICommentService
 
     public async Task<CommentWithoutRepliesDto> ReplyAsync(ReplyCommentDto replyCommentDto)
     {
-        // check if the post exists then check if the parent comment exists
         var user = _userService.GetAuthenticatedUser();
         if (user == null)
         {
@@ -116,7 +115,6 @@ public class CommentService : ICommentService
 
     public async Task<CommentDto> UpdateAsync(UpdateCommentDto updateCommentDto)
     {
-        // check if the post exists and the comment exists and the owner of the comment is the authenticated user then update the comment
         var user = _userService.GetAuthenticatedUser();
         if (user == null)
         {
@@ -148,8 +146,6 @@ public class CommentService : ICommentService
             },
             ReactsCount = comment.ReactionsCount,
             RepliesCount = comment.RepliesCount,
-            // LOAD REPLIES------------------------------------------------------------------------
-            //Replies = new PagedList<CommentWithoutRepliesDto>(),
             CreatedAt = comment.CreatedAt,
             UpdatedAt = comment.UpdatedAt
         };
@@ -224,5 +220,21 @@ public class CommentService : ICommentService
             CreatedAt = r.CreatedAt,
             UpdatedAt = r.UpdatedAt
         }).ToList());
+    }
+
+    public async Task DeleteAsync(int postId, int commentId)
+    {
+        var tokenUser = _userService.GetAuthenticatedUser();
+        if (tokenUser is null) throw new UnAuthenticatedException("User not authenticated.");
+        var post = await _unitOfWork.Posts.GetAsync(p => p.Id == postId);
+        if (post is null) throw new BadRequestException("Post not found.");
+        var comment = await _unitOfWork.Comments.GetAsync(c => c.Id == commentId && c.PostId == postId, ["Replies"]);
+        if (comment is null) throw new BadRequestException("Comment not found.");
+        if (comment.UserId != tokenUser.Id) throw new UnAuthorizedException("User not authorized to delete this comment.");
+        if (comment.Replies is not null) _unitOfWork.Comments.RemoveRange(comment.Replies);
+        _unitOfWork.Comments.Remove(comment);
+        post.CommentsCount -= 1 + comment.RepliesCount;
+        var entitiesDeleted = await _unitOfWork.SaveChangesAsync();
+        if (entitiesDeleted == 0) throw new BadRequestException("Comment can't be deleted now try again later!");
     }
 }

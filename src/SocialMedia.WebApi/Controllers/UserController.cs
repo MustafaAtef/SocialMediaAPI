@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SocialMedia.Application.Dtos;
@@ -19,6 +20,7 @@ namespace SocialMedia.WebApi.Controllers
         }
 
         [HttpPost("{userId}/follow")]
+        [Authorize]
         public async Task<ActionResult> Follow(int userId)
         {
             await _userService.FollowAsync(userId);
@@ -26,6 +28,7 @@ namespace SocialMedia.WebApi.Controllers
         }
 
         [HttpDelete("{userId}/follow")]
+        [Authorize]
         public async Task<ActionResult> UnFollow(int userId)
         {
             await _userService.UnFollowAsync(userId);
@@ -64,5 +67,11 @@ namespace SocialMedia.WebApi.Controllers
             return Ok(messages);
         }
 
+        [HttpPut]
+        [Authorize]
+        public async Task<ActionResult<UserDto>> UpdateUser([FromForm] UpdateUserDto updateUserDto)
+        {
+            return await _userService.UpdateAsync(updateUserDto);
+        }
     }
 }

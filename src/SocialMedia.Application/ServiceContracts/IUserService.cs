@@ -13,4 +13,5 @@ public interface IUserService
     Task<PagedList<UserDto>> GetPagedFollowingsAsync(int userId, int page, int pageSize);
     Task<ICollection<GroupMessagesDto>> GetAllGroupMessagesAsync(int lastMessagesSize);
     Task<GroupMessagesDto> GetPagedGroupMessagesAsync(Guid groupId, int? lastMessageId, int olderMessagesSize);
+    Task<UserDto> UpdateAsync(UpdateUserDto updateUserDto);
 }

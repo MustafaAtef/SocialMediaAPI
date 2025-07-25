@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using SocialMedia.Application.Dtos;
 using SocialMedia.Application.ServiceContracts;
 using SocialMedia.Core.Entities;
+using SocialMedia.Core.Enumerations;
 using SocialMedia.Core.Exceptions;
 
 namespace SocialMedia.Application.Services;
@@ -13,10 +14,13 @@ public class UserService : IUserService
 {
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IUnitOfWork _unitOfWork;
-    public UserService(IHttpContextAccessor httpContextAccessor, IUnitOfWork unitOfWork)
+    private readonly IFileUploader _fileUploader;
+
+    public UserService(IHttpContextAccessor httpContextAccessor, IUnitOfWork unitOfWork, IFileUploader fileUploader)
     {
         _httpContextAccessor = httpContextAccessor;
         _unitOfWork = unitOfWork;
+        _fileUploader = fileUploader;
     }
 
     public async Task FollowAsync(int userId)
@@ -277,5 +281,38 @@ public class UserService : IUserService
                 }).ToList()
             }
         }).ToList()[0];
+    }
+
+    public async Task<UserDto> UpdateAsync(UpdateUserDto updateUserDto)
+    {
+        var tokenUser = GetAuthenticatedUser();
+        if (tokenUser is null) throw new UnAuthenticatedException("User not authenticated");
+        var user = await _unitOfWork.Users.GetAsync(u => u.Id == tokenUser.Id, ["Avatar"]);
+        if (user is null) throw new BadRequestException("User not found.");
+        var oldAvatar = user.Avatar;
+        if (updateUserDto.FirstName is not null) user.FirstName = updateUserDto.FirstName;
+        if (updateUserDto.LastName is not null) user.LastName = updateUserDto.LastName;
+        if (updateUserDto.Avatar is not null)
+        {
+            var uploadedAvatar = await _fileUploader.UploadAsync(updateUserDto.Avatar, "users-avatars");
+            user.Avatar = new()
+            {
+                StorageProvider = uploadedAvatar.StorageProvider,
+                Url = uploadedAvatar.Url
+            };
+
+        }
+        await _unitOfWork.SaveChangesAsync();
+        if (updateUserDto.Avatar is not null && oldAvatar is not null)
+        {
+            await _fileUploader.DeleteAsync(oldAvatar.Url);
+        }
+        return new UserDto
+        {
+            Id = user.Id,
+            Email = user.Email,
+            Name = $"{user.FirstName} {user.LastName}",
+            AvatarUrl = user.Avatar?.Url ?? string.Empty
+        };
     }
 }

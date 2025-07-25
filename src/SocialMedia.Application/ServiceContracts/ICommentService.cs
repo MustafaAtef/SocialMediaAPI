@@ -10,4 +10,5 @@ public interface ICommentService
     Task<CommentDto> UpdateAsync(UpdateCommentDto updateCommentDto);
     Task<PagedList<CommentDto>> GetPagedCommentsAsync(int postId, int page, int pageSize, int repliesSize);
     Task<PagedList<CommentWithoutRepliesDto>> GetPagedRepliesAsync(int commentId, int page, int pageSize);
+    Task DeleteAsync(int postId, int commentId);
 }

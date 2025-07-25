@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SocialMedia.Application.Dtos;
@@ -15,6 +16,7 @@ namespace SocialMedia.WebApi.Controllers
             _commentService = commentService;
         }
         [HttpPost("{postId}/comments")]
+        [Authorize]
         public async Task<ActionResult<CommentWithoutRepliesDto>> CreateAsync(int postId, CreateCommentDto createCommentDto)
         {
             createCommentDto.PostId = postId;
@@ -22,6 +24,7 @@ namespace SocialMedia.WebApi.Controllers
         }
 
         [HttpPost("{postId}/comments/{parentCommentId}")]
+        [Authorize]
         public async Task<ActionResult<CommentWithoutRepliesDto>> ReplyAsync(int postId, int parentCommentId, ReplyCommentDto replyCommentDto)
         {
             replyCommentDto.PostId = postId;
@@ -30,6 +33,7 @@ namespace SocialMedia.WebApi.Controllers
         }
 
         [HttpPut("{postId}/comments/{commentId}")]
+        [Authorize]
         public async Task<ActionResult<CommentDto>> UpdateAsync(int postId, int commentId, UpdateCommentDto updateCommentDto)
         {
             updateCommentDto.PostId = postId;
@@ -46,6 +50,14 @@ namespace SocialMedia.WebApi.Controllers
         public async Task<ActionResult<PagedList<CommentWithoutRepliesDto>>> GetAllCommentReplies(int commentId, int page = 1, int pageSize = 10)
         {
             return await _commentService.GetPagedRepliesAsync(commentId, page, pageSize);
+        }
+
+        [HttpDelete("{postId}/comments/{commentId}")]
+        [Authorize]
+        public async Task<IActionResult> DeleteAsync(int postId, int commentId)
+        {
+            await _commentService.DeleteAsync(postId, commentId);
+            return Ok();
         }
     }
 

@@ -1,6 +1,7 @@
 using EducationCenter.Core.RepositoryContracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using SignalRSwaggerGen.Attributes;
 using SocialMedia.Application.Dtos;
 using SocialMedia.Application.ServiceContracts;
 using SocialMedia.Core.Entities;
@@ -8,6 +9,7 @@ using SocialMedia.Core.Enumerations;
 
 namespace SocialMedia.WebApi.Hubs;
 
+[SignalRHub]
 public class ChatHub : Hub
 {
     private readonly IUnitOfWork _unitOfWork;

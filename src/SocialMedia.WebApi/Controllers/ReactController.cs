@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using SocialMedia.Application.Dtos;
@@ -7,6 +8,7 @@ namespace SocialMedia.WebApi.Controllers
 {
     [Route("api/posts")]
     [ApiController]
+    [Authorize]
     public class ReactController : ControllerBase
     {
         private readonly IReactService _reactService;
@@ -44,12 +46,14 @@ namespace SocialMedia.WebApi.Controllers
         }
 
         [HttpGet("{postId}/reacts")]
+        [AllowAnonymous]
         public async Task<ActionResult<PagedList<PostReactDto>>> GetPostReactsAsync(int postId, int page = 1, int pageSize = 100)
         {
             return await _reactService.GetPagedPostReactsAsync(postId, page, pageSize);
         }
 
         [HttpGet("{postId}/comments/{commentId}/reacts")]
+        [AllowAnonymous]
         public async Task<ActionResult<PagedList<CommentReactDto>>> GetCommentReactsAsync(int commentId, int page = 1, int pageSize = 100)
         {
             return await _reactService.GetPagedcommentReactsAsync(commentId, page, pageSize);

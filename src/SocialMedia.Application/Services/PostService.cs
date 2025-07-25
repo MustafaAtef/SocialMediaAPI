@@ -199,4 +199,82 @@ public class PostService : IPostService
             Comments = await _commentService.GetPagedCommentsAsync(postId, 1, commentPageSize, commentRepliesSize)
         };
     }
+
+    public async Task DeleteAsync(int postId)
+    {
+        var tokenUser = _userService.GetAuthenticatedUser();
+        if (tokenUser is null) throw new UnAuthenticatedException("User not authenticated.");
+        var post = await _unitOfWork.Posts.GetAsync(p => p.Id == postId);
+        if (post is null) throw new BadRequestException("Post not found.");
+        if (post.UserId != tokenUser.Id) throw new UnAuthorizedException("User not authorized to delete this post.");
+        post.IsDeleted = true;
+        post.DeletedAt = DateTime.Now;
+        await _unitOfWork.SaveChangesAsync();
+    }
+
+    public async Task<PagedList<UserPostsDto>> GetPagedDeletedPostsAsync(int page, int pageSize)
+    {
+        var userToken = _userService.GetAuthenticatedUser();
+        if (userToken is null) throw new UnAuthenticatedException("User not authenticated.");
+        var user = await _unitOfWork.Users.GetAsync(u => u.Id == userToken.Id);
+        if (user is null)
+        {
+            throw new BadRequestException("User not found.");
+        }
+        var posts = await _unitOfWork.Posts.GetAllDeletedPostsAsync(userToken.Id, page, pageSize);
+        var postsCount = await _unitOfWork.Posts.CountAsync(p => p.UserId == userToken.Id);
+        return new(postsCount, pageSize, page, posts.Select(p => new UserPostsDto()
+        {
+            Id = p.Id,
+            Content = p.Content,
+            Attachments = p.Attachments?.Select(a => new AttachmentDto
+            {
+                Id = a.Id,
+                Url = a.Url
+            }).ToList() ?? new List<AttachmentDto>(),
+            CreatedAt = p.CreatedAt,
+            UpdatedAt = p.UpdatedAt,
+            DeletedAt = p.DeletedAt,
+            ReactsCount = p.ReactionsCount,
+            CommentsCount = p.CommentsCount
+        }).ToList());
+    }
+
+    public async Task<UserPostsDto> RestoreDeletedPostAsync(int postId)
+    {
+        var userToken = _userService.GetAuthenticatedUser();
+        if (userToken is null) throw new UnAuthenticatedException("User is not authenticated.");
+        var post = await _unitOfWork.Posts.GetDeletedPostAsync(postId);
+        if (post is null) throw new BadRequestException("Post not found.");
+        if (post.UserId != userToken.Id) throw new UnAuthorizedException("User is not authorized to restore this post.");
+        post.IsDeleted = false;
+        post.DeletedAt = null;
+        await _unitOfWork.SaveChangesAsync();
+        return new UserPostsDto()
+        {
+            Id = post.Id,
+            Content = post.Content,
+            Attachments = post.Attachments?.Select(a => new AttachmentDto
+            {
+                Id = a.Id,
+                Url = a.Url
+            }).ToList() ?? new List<AttachmentDto>(),
+            CreatedAt = post.CreatedAt,
+            UpdatedAt = post.UpdatedAt,
+            DeletedAt = post.DeletedAt,
+            ReactsCount = post.ReactionsCount,
+            CommentsCount = post.CommentsCount
+        };
+    }
+
+    public async Task PermanentDeleteAsync(int postId)
+    {
+        var userToken = _userService.GetAuthenticatedUser();
+        if (userToken is null) throw new UnAuthenticatedException("User is not authenticated.");
+        var post = await _unitOfWork.Posts.GetAsync(postId);
+        if (post is null) throw new BadRequestException("Post not found.");
+        if (post.UserId != userToken.Id) throw new UnAuthorizedException("User not authorized to permanently delete this post.");
+        var success = await _unitOfWork.Posts.PermanentDeleteAsync(postId);
+        if (!success) throw new BadRequestException("Error happened while deleting the post try again later.");
+    }
 }

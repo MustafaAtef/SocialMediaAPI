@@ -17,6 +17,6 @@ public interface IUnitOfWork : IDisposable
 
     IMessageRepository Messages { get; }
 
-    Task SaveChangesAsync();
+    Task<int> SaveChangesAsync();
 
 }
