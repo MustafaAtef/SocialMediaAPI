@@ -14,6 +14,9 @@ using SocialMedia.WebApi.Middlewares;
 using SocialMedia.WebApi.Hubs;
 using Microsoft.OpenApi.Models;
 using SocialMedia.WebApi.Filters;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -48,9 +51,10 @@ builder.Services.AddScoped<Supabase.Client>(_ => new Supabase.Client(
 );
 
 var jwtOptions = builder.Configuration.GetSection("jwt").Get<JwtOptions>();
+
 builder.Services.AddAuthentication().AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
 {
-    if (jwtOptions is null) throw new Exception();
+    if (jwtOptions is null) throw new Exception("jwt options is null");
     // save the authentication token to authentication properties so it can be accessed from httpContext object
     options.SaveToken = true;
     options.MapInboundClaims = false;
@@ -111,9 +115,22 @@ builder.Services.AddSwaggerGen(c =>
     c.OperationFilter<AuthorizeCheckOperationFilter>();
     c.AddSignalRSwaggerGen();
 });
+
 var app = builder.Build();
 
 app.UseGlobalErrorHandling();
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        if (dbContext.Database.GetPendingMigrations().Any())
+        {
+            dbContext.Database.Migrate();
+        }
+    }
+    catch (Exception) { }
+}
 app.UseStaticFiles();
 app.UseCors();
 if (app.Environment.IsDevelopment())

@@ -1,0 +1,22 @@
+services:
+  api:
+    build: .
+    ports:
+      - 5001:5000
+    depends_on:
+      - sqlserver-db
+    volumes:
+      - api_wwwroot:/app/wwwroot
+  sqlserver-db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong@Passw0rd
+    ports:
+      - 1234:1433
+    volumes:
+      - db_data:/var/opt/mssql
+
+volumes:
+  db_data:
+  api_wwwroot:
