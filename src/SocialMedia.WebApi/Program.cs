@@ -12,7 +12,7 @@ using Microsoft.IdentityModel.Tokens;
 using SocialMedia.Application.Service;
 using SocialMedia.WebApi.Middlewares;
 using SocialMedia.WebApi.Hubs;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 using SocialMedia.WebApi.Filters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -33,22 +33,22 @@ builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IFileUploader, ServerFileUploader>();
-builder.Services.AddScoped<SupabaseFileUploader>();
+builder.Services.AddScoped<ServerFileUploader>();
 builder.Services.AddScoped<IPostService, PostService>();
 builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IReactService, ReactService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-builder.Services.AddScoped<Supabase.Client>(_ => new Supabase.Client(
-    builder.Configuration["Supabase:Url"],
-    builder.Configuration["Supabase:Key"],
-     new()
-     {
-         AutoRefreshToken = true,
-         AutoConnectRealtime = true,
-     })
-);
+// builder.Services.AddScoped<Supabase.Client>(_ => new Supabase.Client(
+//     builder.Configuration["Supabase:Url"],
+//     builder.Configuration["Supabase:Key"],
+//      new()
+//      {
+//          AutoRefreshToken = true,
+//          AutoConnectRealtime = true,
+//      })
+// );
 
 var jwtOptions = builder.Configuration.GetSection("jwt").Get<JwtOptions>();
 
@@ -105,7 +105,7 @@ builder.Services.AddSwaggerGen(c =>
     {
         Name = "Authorization",
         Type = SecuritySchemeType.Http,
-        Scheme = "bearer",
+        Scheme = "Bearer",
         BearerFormat = "JWT",
         In = ParameterLocation.Header,
         Description = "Enter your JWT token."
