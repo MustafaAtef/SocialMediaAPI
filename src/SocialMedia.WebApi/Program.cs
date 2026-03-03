@@ -16,6 +16,7 @@ using Microsoft.OpenApi;
 using SocialMedia.WebApi.Filters;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using SocialMedia.Application;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -115,6 +116,8 @@ builder.Services.AddSwaggerGen(c =>
     c.OperationFilter<AuthorizeCheckOperationFilter>();
     c.AddSignalRSwaggerGen();
 });
+
+builder.Services.AddApplication();
 
 var app = builder.Build();
 
