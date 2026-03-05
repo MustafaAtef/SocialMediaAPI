@@ -1,11 +1,9 @@
 
 
-using EducationCenter.Core.RepositoryContracts;
 using SocialMedia.Core.RepositoryContracts;
 using SocialMedia.Infrastructure.Database;
-using SocialMedia.Infrastructure.Repositories;
 
-namespace EducationCenterAPI.Repositories;
+namespace SocialMedia.Infrastructure.Repositories;
 
 public class UnitOfWork : IUnitOfWork
 {

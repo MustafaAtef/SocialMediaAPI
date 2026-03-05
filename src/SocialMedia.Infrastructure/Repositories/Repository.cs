@@ -1,9 +1,11 @@
 using System;
 using System.Linq.Expressions;
+
 using SocialMedia.Core.RepositoryContracts;
+
 using Microsoft.EntityFrameworkCore;
 
-namespace EducationCenter.Core.RepositoryContracts;
+namespace SocialMedia.Infrastructure.Repositories;
 
 public class Repository<TEntity> : IRepository<TEntity> where TEntity : class
 {

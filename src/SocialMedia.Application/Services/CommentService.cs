@@ -1,5 +1,5 @@
 using System;
-using EducationCenter.Core.RepositoryContracts;
+using SocialMedia.Core.RepositoryContracts;
 using Microsoft.AspNetCore.Http;
 using SocialMedia.Application.Dtos;
 using SocialMedia.Application.ServiceContracts;

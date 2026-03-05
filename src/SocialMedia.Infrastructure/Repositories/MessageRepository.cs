@@ -1,8 +1,7 @@
 using System;
-using EducationCenter.Core.RepositoryContracts;
+using SocialMedia.Core.RepositoryContracts;
 using Microsoft.EntityFrameworkCore;
 using SocialMedia.Core.Entities;
-using SocialMedia.Core.RepositoryContracts;
 
 namespace SocialMedia.Infrastructure.Repositories;
 

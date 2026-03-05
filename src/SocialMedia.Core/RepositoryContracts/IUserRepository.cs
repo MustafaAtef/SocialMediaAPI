@@ -1,8 +1,7 @@
 using System;
-using SocialMedia.Core.Entities;
-using SocialMedia.Core.RepositoryContracts;
 
-namespace EducationCenter.Core.RepositoryContracts;
+using SocialMedia.Core.Entities;
+namespace SocialMedia.Core.RepositoryContracts;
 
 public interface IUserRepository : IRepository<User>
 {

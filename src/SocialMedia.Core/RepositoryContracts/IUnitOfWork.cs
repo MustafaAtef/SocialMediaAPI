@@ -1,8 +1,6 @@
 
 
-using SocialMedia.Core.RepositoryContracts;
-
-namespace EducationCenter.Core.RepositoryContracts;
+namespace SocialMedia.Core.RepositoryContracts;
 
 public interface IUnitOfWork : IDisposable
 {

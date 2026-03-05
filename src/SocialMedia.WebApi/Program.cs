@@ -1,6 +1,6 @@
 using System.Text;
-using EducationCenter.Core.RepositoryContracts;
-using EducationCenterAPI.Repositories;
+using SocialMedia.Core.RepositoryContracts;
+using SocialMedia.Infrastructure.Repositories;
 using SocialMedia.Application.ServiceContracts;
 using SocialMedia.Application.Services;
 using SocialMedia.Infrastructure.Auth;

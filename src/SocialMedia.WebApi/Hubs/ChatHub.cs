@@ -1,4 +1,4 @@
-using EducationCenter.Core.RepositoryContracts;
+using SocialMedia.Core.RepositoryContracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 using SignalRSwaggerGen.Attributes;

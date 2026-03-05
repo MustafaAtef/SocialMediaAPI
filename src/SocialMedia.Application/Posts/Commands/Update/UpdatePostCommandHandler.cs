@@ -1,4 +1,4 @@
-using EducationCenter.Core.RepositoryContracts;
+using SocialMedia.Core.RepositoryContracts;
 
 using SocialMedia.Application.Abstractions.Messaging;
 using SocialMedia.Application.Dtos;

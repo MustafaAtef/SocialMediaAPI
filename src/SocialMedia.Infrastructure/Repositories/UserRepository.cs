@@ -1,4 +1,4 @@
-using EducationCenter.Core.RepositoryContracts;
+using SocialMedia.Core.RepositoryContracts;
 using SocialMedia.Infrastructure.Database;
 using SocialMedia.Core.Entities;
 using Microsoft.EntityFrameworkCore;
