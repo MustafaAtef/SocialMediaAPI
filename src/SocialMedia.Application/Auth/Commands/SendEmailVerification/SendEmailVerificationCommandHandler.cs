@@ -1,5 +1,4 @@
-using System.Security.Cryptography;
-
+using SocialMedia.Application.Common;
 using SocialMedia.Core.RepositoryContracts;
 
 using Microsoft.Extensions.Configuration;
@@ -27,7 +26,7 @@ public class SendEmailVerificationCommandHandler(
         if (user.IsEmailVerified)
             return Result.Failure(AuthErrors.EmailAlreadyVerified);
 
-        user.EmailVerificationToken = _randomToken();
+        user.EmailVerificationToken = CryptoHelper.GenerateRandomToken();
         user.EmailVerificationTokenExpiryTime = DateTime.Now.AddMinutes(
             configuration["EmailVerificationTokenExpiryMinutes"] != null
                 ? int.Parse(configuration["EmailVerificationTokenExpiryMinutes"] ?? "")
@@ -44,11 +43,4 @@ public class SendEmailVerificationCommandHandler(
         return Result.Success();
     }
 
-    private static string _randomToken(int size = 32)
-    {
-        using var rng = RandomNumberGenerator.Create();
-        var bytes = new byte[size];
-        rng.GetBytes(bytes);
-        return Convert.ToHexString(bytes);
-    }
 }

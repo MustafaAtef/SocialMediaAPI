@@ -1,5 +1,4 @@
-using System.Security.Cryptography;
-
+using SocialMedia.Application.Common;
 using SocialMedia.Core.RepositoryContracts;
 
 using Microsoft.Extensions.Configuration;
@@ -24,7 +23,7 @@ public class ForgetPasswordCommandHandler(
         if (user == null)
             return Result.Failure(UserErrors.NotFound);
 
-        user.PasswordResetToken = _randomToken();
+        user.PasswordResetToken = CryptoHelper.GenerateRandomToken();
         user.PasswordResetTokenExpiryTime = DateTime.Now.AddMinutes(
             configuration["PasswordResetTokenExpiryMinutes"] != null
                 ? int.Parse(configuration["PasswordResetTokenExpiryMinutes"] ?? "")
@@ -40,11 +39,4 @@ public class ForgetPasswordCommandHandler(
         return Result.Success();
     }
 
-    private static string _randomToken(int size = 32)
-    {
-        using var rng = RandomNumberGenerator.Create();
-        var bytes = new byte[size];
-        rng.GetBytes(bytes);
-        return Convert.ToHexString(bytes);
-    }
 }

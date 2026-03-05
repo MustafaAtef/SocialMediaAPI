@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using System.Security.Cryptography;
+using SocialMedia.Application.Common;
 using SocialMedia.Core.RepositoryContracts;
 using SocialMedia.Application.Dtos;
 using SocialMedia.Application.ServiceContracts;
@@ -50,7 +50,7 @@ public class AuthService : IAuthService
         JwtDto jwtData = _jwtService.GenerateToken(newUser);
         newUser.RefreshToken = jwtData.RefreshToken;
         newUser.RefreshTokenExpiryTime = jwtData.RefreshTokenExpirationDate;
-        newUser.EmailVerificationToken = _randomToken();
+        newUser.EmailVerificationToken = CryptoHelper.GenerateRandomToken();
         newUser.EmailVerificationTokenExpiryTime = DateTime.Now.AddMinutes(_configuration["EmailVerificationTokenExpiryMinutes"] != null ? int.Parse(_configuration["EmailVerificationTokenExpiryMinutes"] ?? "") : 15);
         if (registerRequest.Avatar != null)
         {
@@ -177,7 +177,7 @@ public class AuthService : IAuthService
             throw new BadRequestException("User not found.");
         }
 
-        var token = _randomToken();
+        var token = CryptoHelper.GenerateRandomToken();
         user.PasswordResetToken = token;
         user.PasswordResetTokenExpiryTime = DateTime.Now.AddMinutes(_configuration["PasswordResetTokenExpiryMinutes"] != null ? int.Parse(_configuration["PasswordResetTokenExpiryMinutes"] ?? "") : 15);
         await _unitOfWork.SaveChangesAsync();
@@ -222,7 +222,7 @@ public class AuthService : IAuthService
             throw new BadRequestException("Email is already verified.");
         }
 
-        user.EmailVerificationToken = _randomToken();
+        user.EmailVerificationToken = CryptoHelper.GenerateRandomToken();
         user.EmailVerificationTokenExpiryTime = DateTime.Now.AddMinutes(_configuration["EmailVerificationTokenExpiryMinutes"] != null ? int.Parse(_configuration["EmailVerificationTokenExpiryMinutes"] ?? "") : 15);
         await _unitOfWork.SaveChangesAsync();
         var cts = new CancellationTokenSource();
@@ -246,11 +246,4 @@ public class AuthService : IAuthService
     }
 
 
-    private string _randomToken(int size = 32)
-    {
-        using var randomNumberGenerator = RandomNumberGenerator.Create();
-        var randomBytes = new byte[size];
-        randomNumberGenerator.GetBytes(randomBytes);
-        return Convert.ToHexString(randomBytes);
-    }
 }

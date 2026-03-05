@@ -1,5 +1,4 @@
-using System.Security.Cryptography;
-
+using SocialMedia.Application.Common;
 using SocialMedia.Core.RepositoryContracts;
 
 using Microsoft.Extensions.Configuration;
@@ -39,7 +38,7 @@ public class RegisterCommandHandler(
         JwtDto jwtData = jwtService.GenerateToken(newUser);
         newUser.RefreshToken = jwtData.RefreshToken;
         newUser.RefreshTokenExpiryTime = jwtData.RefreshTokenExpirationDate;
-        newUser.EmailVerificationToken = _randomToken();
+        newUser.EmailVerificationToken = CryptoHelper.GenerateRandomToken();
         newUser.EmailVerificationTokenExpiryTime = DateTime.Now.AddMinutes(
             configuration["EmailVerificationTokenExpiryMinutes"] != null
                 ? int.Parse(configuration["EmailVerificationTokenExpiryMinutes"] ?? "")
@@ -81,11 +80,4 @@ public class RegisterCommandHandler(
         });
     }
 
-    private static string _randomToken(int size = 32)
-    {
-        using var rng = RandomNumberGenerator.Create();
-        var bytes = new byte[size];
-        rng.GetBytes(bytes);
-        return Convert.ToHexString(bytes);
-    }
 }

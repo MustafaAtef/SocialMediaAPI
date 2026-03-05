@@ -1,12 +1,19 @@
 ﻿using SocialMedia.Core.Entities;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SocialMedia.Infrastructure.Outbox;
+using Newtonsoft.Json;
 
 namespace SocialMedia.Infrastructure.Database;
 
 public class AppDbContext : DbContext
 {
+    private static readonly JsonSerializerSettings jsonSerializerSettings = new JsonSerializerSettings
+    {
+        TypeNameHandling = TypeNameHandling.All
+    };
     public AppDbContext()
     {
 
@@ -103,11 +110,46 @@ public class AppDbContext : DbContext
             entity.HasOne(e => e.Message).WithMany(m => m.MessageStatuses).HasForeignKey(e => e.MessageId);
             entity.HasOne(e => e.Reciever).WithMany(u => u.MessageStatuses).HasForeignKey(e => e.RecieverId);
         });
+
+        modelBuilder.Entity<OutboxMessage>(entity =>
+        {
+            entity.HasKey(om => om.Id);
+            entity.Property(om => om.Type).IsRequired();
+            entity.Property(om => om.Payload).IsRequired().HasColumnType("nvarchar(max)");
+            entity.HasIndex(om => new { om.ProcessedOn, om.OccurredOn }).HasFilter("[ProcessedOn] IS NULL");
+        });
     }
     public DbSet<User> Users { get; set; } = null!;
     public DbSet<Post> Posts { get; set; } = null!;
     public DbSet<Comment> Comments { get; set; } = null!;
     public DbSet<FollowerFollowing> FollowerFollowing { get; set; } = null!;
+
+    public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        _addDomainEventsAsOutboxMessages();
+        return await base.SaveChangesAsync(cancellationToken);
+    }
+
+    private void _addDomainEventsAsOutboxMessages()
+    {
+        var outboxMessages = ChangeTracker.Entries<Entity>()
+        .Select(entry => entry.Entity)
+        .SelectMany(entity =>
+        {
+            var domainEvents = entity.GetDomainEvents();
+            entity.ClearDomainEvents();
+            return domainEvents;
+        })
+        .Select(domainEvent => new OutboxMessage
+        {
+            Id = Guid.NewGuid(),
+            Type = domainEvent.GetType().Name!,
+            Payload = JsonConvert.SerializeObject(domainEvent, jsonSerializerSettings),
+            OccurredOn = DateTime.UtcNow
+        }).ToList();
+
+        AddRange(outboxMessages);
+    }
 }
 
 public static class AppDbContextExtensions
