@@ -7,6 +7,7 @@ using SocialMedia.Infrastructure.Database;
 
 namespace SocialMedia.Infrastructure.Repositories;
 
+
 public class CommentReactRepository : Repository<CommentReact>, ICommentReactRepository
 {
     public CommentReactRepository(AppDbContext appDbContext) : base(appDbContext)

@@ -4,6 +4,7 @@ using SocialMedia.Infrastructure.Repositories;
 using SocialMedia.Application.ServiceContracts;
 using SocialMedia.Application.Services;
 using SocialMedia.Infrastructure.Auth;
+using SocialMedia.Application.Abstractions.data;
 using SocialMedia.Infrastructure.Database;
 using SocialMedia.Infrastructure.Email;
 using SocialMedia.Infrastructure.FileUploading;
@@ -40,6 +41,7 @@ builder.Services.AddScoped<ICommentService, CommentService>();
 builder.Services.AddScoped<IReactService, ReactService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<ISqlConnectionFactory, SqlConnectionFactory>();
 
 // builder.Services.AddScoped<Supabase.Client>(_ => new Supabase.Client(
 //     builder.Configuration["Supabase:Url"],

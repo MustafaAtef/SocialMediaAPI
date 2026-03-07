@@ -8,3 +8,8 @@ public interface IQuery<TResponse> : IRequest<Result<TResponse>>
 {
 
 }
+
+public interface ICurrentUserQuery<TResponse> : IQuery<TResponse>
+{
+    public int UserId { get; set; }
+}

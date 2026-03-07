@@ -4,6 +4,7 @@
   </ItemGroup>
 
   <ItemGroup>
+      <PackageReference Include="Dapper" />
       <PackageReference Include="FluentValidation.DependencyInjectionExtensions" />
       <PackageReference Include="MediatR" />
       <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" />
@@ -12,10 +13,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Comments/Queries/Responses/" />
     <Folder Include="Posts/Commands/Restore/" />
     <Folder Include="Posts/Commands/SoftDelete/" />
     <Folder Include="Posts/Commands/Update/" />
-    <Folder Include="Posts/Queries/" />
   </ItemGroup>
 
 </Project>
