@@ -2,7 +2,7 @@ using System;
 
 namespace SocialMedia.Core.Entities;
 
-public class Comment
+public class Comment : Entity
 {
     public int Id { get; set; }
     public string Content { get; set; }

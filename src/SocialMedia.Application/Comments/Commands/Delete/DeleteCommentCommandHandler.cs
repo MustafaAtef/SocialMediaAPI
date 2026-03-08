@@ -1,9 +1,9 @@
 using SocialMedia.Core.RepositoryContracts;
-
 using SocialMedia.Application.Abstractions.Messaging;
 using SocialMedia.Application.ServiceContracts;
 using SocialMedia.Core.Abstractions;
 using SocialMedia.Core.Errors;
+using SocialMedia.Core.Events.Comments;
 
 namespace SocialMedia.Application.Comments.Commands.Delete;
 
@@ -33,6 +33,7 @@ public class DeleteCommentCommandHandler(IUserService userService, IUnitOfWork u
 
         unitOfWork.Comments.Remove(comment);
         post.CommentsCount -= 1 + comment.RepliesCount;
+        comment.RaiseDomainEvent(() => new CommentDeletedDomainEvent(comment.Id, comment.PostId, comment.RepliesCount));
 
         var entitiesDeleted = await unitOfWork.SaveChangesAsync();
         if (entitiesDeleted == 0)

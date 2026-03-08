@@ -1,9 +1,9 @@
 using SocialMedia.Core.RepositoryContracts;
-
 using SocialMedia.Application.Abstractions.Messaging;
 using SocialMedia.Application.ServiceContracts;
 using SocialMedia.Core.Abstractions;
 using SocialMedia.Core.Errors;
+using SocialMedia.Core.Events.CommentReacts;
 
 namespace SocialMedia.Application.Reacts.Commands.RemoveCommentReact;
 
@@ -27,6 +27,7 @@ public class RemoveCommentReactCommandHandler(IUserService userService, IUnitOfW
 
         unitOfWork.CommentReacts.Remove(commentReact);
         comment.ReactionsCount--;
+        commentReact.RaiseDomainEvent(() => new CommentReactRemovedDomainEvent(commentReact.Id, commentReact.CommentId));
         await unitOfWork.SaveChangesAsync();
 
         return Result.Success();

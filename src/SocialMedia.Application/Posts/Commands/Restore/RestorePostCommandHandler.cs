@@ -1,11 +1,11 @@
 using SocialMedia.Core.RepositoryContracts;
-
 using SocialMedia.Application.Abstractions.Messaging;
 using SocialMedia.Application.Dtos;
 using SocialMedia.Application.ServiceContracts;
 using SocialMedia.Core.Abstractions;
 using SocialMedia.Core.Errors;
 using SocialMedia.Core.Exceptions;
+using SocialMedia.Core.Events.Posts;
 
 namespace SocialMedia.Application.Posts.Commands.Restore;
 
@@ -24,6 +24,7 @@ public class RestorePostCommandHandler(IUserService userService, IUnitOfWork uni
 
         post.IsDeleted = false;
         post.DeletedAt = null;
+        post.RaiseDomainEvent(() => new PostRestoredDomainEvent(post.Id));
         await unitOfWork.SaveChangesAsync();
 
         return new UserPostsDto()

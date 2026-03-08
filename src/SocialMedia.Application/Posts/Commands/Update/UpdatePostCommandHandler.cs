@@ -1,5 +1,4 @@
 using SocialMedia.Core.RepositoryContracts;
-
 using SocialMedia.Application.Abstractions.Messaging;
 using SocialMedia.Application.Dtos;
 using SocialMedia.Application.ServiceContracts;
@@ -8,6 +7,7 @@ using SocialMedia.Core.Entities;
 using SocialMedia.Core.Enumerations;
 using SocialMedia.Core.Errors;
 using SocialMedia.Core.Exceptions;
+using SocialMedia.Core.Events.Posts;
 
 namespace SocialMedia.Application.Posts.Commands.Update;
 
@@ -35,20 +35,24 @@ public class UpdatePostCommandHandler(IUserService userService, IFileUploader fi
         if (request.Content is not null) post.Content = request.Content;
         post.UpdatedAt = DateTime.Now;
 
+        var addedAttachments = new List<PostAttachment>();
         if (request.AddedAttachments != null)
         {
             foreach (var attachment in request.AddedAttachments)
             {
                 (StorageProvider storageType, AttachmentType attachmentType, string url) = await fileUploader.UploadAsync(attachment, "posts-attachments");
-                post.Attachments?.Add(new PostAttachment
+                var newAttachment = new PostAttachment
                 {
                     AttachmentType = attachmentType,
                     Url = url,
                     StorageProvider = storageType
-                });
+                };
+                post.Attachments?.Add(newAttachment);
+                addedAttachments.Add(newAttachment);
             }
         }
-        await unitOfWork.SaveChangesAsync();
+
+        var removedAttachmentIds = new List<int>();
         if (request.DeletedAttachmentIds != null)
         {
             foreach (var attachmentId in request.DeletedAttachmentIds)
@@ -57,10 +61,21 @@ public class UpdatePostCommandHandler(IUserService userService, IFileUploader fi
                 if (attachment != null)
                 {
                     post.Attachments?.Remove(attachment);
+                    removedAttachmentIds.Add(attachmentId);
                     await fileUploader.DeleteAsync(attachment.Url);
                 }
             }
         }
+
+        post.RaiseDomainEvent(() => new PostUpdatedDomainEvent(
+            post.Id,
+            post.Content,
+            post.UpdatedAt.Value,
+            addedAttachments.Select(a => new PostAttachmentData(a.Id, a.Url, a.AttachmentType)).ToList(),
+            removedAttachmentIds
+        ));
+        await unitOfWork.SaveChangesAsync();
+
         return new PostDto
         {
             Id = post.Id,

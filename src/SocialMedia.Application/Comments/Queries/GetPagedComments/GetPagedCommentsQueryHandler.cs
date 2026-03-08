@@ -1,6 +1,6 @@
 using Dapper;
 
-using SocialMedia.Application.Abstractions.data;
+using SocialMedia.Application.Abstractions.Data;
 using SocialMedia.Application.Abstractions.Messaging;
 using SocialMedia.Application.Comments.Queries.Common.Projections;
 using SocialMedia.Application.Comments.Queries.Common.Responses;

@@ -1,10 +1,10 @@
 using SocialMedia.Core.RepositoryContracts;
-
 using SocialMedia.Application.Abstractions.Messaging;
 using SocialMedia.Application.ServiceContracts;
 using SocialMedia.Core.Abstractions;
 using SocialMedia.Core.Errors;
 using SocialMedia.Core.Exceptions;
+using SocialMedia.Core.Events.Posts;
 
 namespace SocialMedia.Application.Posts.Commands.PermanentDelete;
 
@@ -21,6 +21,7 @@ public class PermanentDeletePostCommandHandler(IUserService userService, IUnitOf
         // REFACTOR
         if (post.UserId != userToken.Id) throw new UnAuthorizedException("User not authorized to permanently delete this post.");
 
+        post.RaiseDomainEvent(() => new PostPermanentDeletedDomainEvent(post.Id));
         var success = await unitOfWork.Posts.PermanentDeleteAsync(request.PostId);
         if (!success) throw new BadRequestException("Error happened while deleting the post try again later.");
 

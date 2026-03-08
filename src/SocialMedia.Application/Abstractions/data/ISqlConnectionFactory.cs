@@ -1,6 +1,6 @@
 using System.Data;
 
-namespace SocialMedia.Application.Abstractions.data;
+namespace SocialMedia.Application.Abstractions.Data;
 
 public interface ISqlConnectionFactory
 {

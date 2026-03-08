@@ -1,10 +1,10 @@
 using SocialMedia.Core.RepositoryContracts;
-
 using SocialMedia.Application.Abstractions.Messaging;
 using SocialMedia.Application.Dtos;
 using SocialMedia.Application.ServiceContracts;
 using SocialMedia.Core.Abstractions;
 using SocialMedia.Core.Errors;
+using SocialMedia.Core.Events.Comments;
 
 namespace SocialMedia.Application.Comments.Commands.Update;
 
@@ -27,6 +27,7 @@ public class UpdateCommentCommandHandler(IUserService userService, IUnitOfWork u
 
         comment.Content = request.Content;
         comment.UpdatedAt = DateTime.Now;
+        comment.RaiseDomainEvent(() => new CommentUpdatedDomainEvent(comment.Id, comment.Content, comment.UpdatedAt.Value));
         await unitOfWork.SaveChangesAsync();
 
         return Result.Success(new CommentDto

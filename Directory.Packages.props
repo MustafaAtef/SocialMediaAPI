@@ -4,11 +4,12 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
+    <!-- Core Packages -->
+    <PackageVersion Include="MediatR.Contracts" Version="2.0.1" />
     <!-- Application Packages -->
     <PackageVersion Include="Dapper" Version="2.1.72" />
     <PackageVersion Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
     <PackageVersion Include="MediatR" Version="14.0.0" />
-    <PackageVersion Include="MediatR.Contracts" Version="2.0.1" />
     <PackageVersion Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.9" />
     <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.3" />
     <!-- Infrastructure Packages -->

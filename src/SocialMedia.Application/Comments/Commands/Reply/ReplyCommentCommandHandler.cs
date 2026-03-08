@@ -1,11 +1,11 @@
 using SocialMedia.Core.RepositoryContracts;
-
 using SocialMedia.Application.Abstractions.Messaging;
 using SocialMedia.Application.Dtos;
 using SocialMedia.Application.ServiceContracts;
 using SocialMedia.Core.Abstractions;
 using SocialMedia.Core.Entities;
 using SocialMedia.Core.Errors;
+using SocialMedia.Core.Events.Comments;
 
 namespace SocialMedia.Application.Comments.Commands.Reply;
 
@@ -43,6 +43,10 @@ public class ReplyCommentCommandHandler(IUserService userService, IUnitOfWork un
         parentComment.RepliesCount++;
         post.CommentsCount++;
         unitOfWork.Comments.Add(reply);
+        reply.RaiseDomainEvent(() => new CommentCreatedDomainEvent(
+            reply.Id, reply.PostId, reply.ParentCommentId,
+            user.Id, user.Name, user.Email, user.AvatarUrl,
+            reply.Content, reply.CreatedAt));
         await unitOfWork.SaveChangesAsync();
 
         return Result.Success(new CommentWithoutRepliesDto

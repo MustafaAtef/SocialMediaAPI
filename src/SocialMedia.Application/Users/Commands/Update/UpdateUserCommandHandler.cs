@@ -1,11 +1,11 @@
 using SocialMedia.Core.RepositoryContracts;
-
 using SocialMedia.Application.Abstractions.Messaging;
 using SocialMedia.Application.Dtos;
 using SocialMedia.Application.ServiceContracts;
 using SocialMedia.Core.Abstractions;
 using SocialMedia.Core.Entities;
 using SocialMedia.Core.Errors;
+using SocialMedia.Core.Events.Users;
 
 namespace SocialMedia.Application.Users.Commands.Update;
 
@@ -37,6 +37,10 @@ public class UpdateUserCommandHandler(IUserService userService, IUnitOfWork unit
             };
         }
 
+        user.RaiseDomainEvent(() => new UserUpdatedDomainEvent(
+            user.Id,
+            $"{user.FirstName} {user.LastName}",
+            user.Avatar?.Url ?? string.Empty));
         await unitOfWork.SaveChangesAsync();
 
         if (request.Avatar is not null && oldAvatar is not null)

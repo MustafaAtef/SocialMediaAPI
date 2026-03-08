@@ -1,5 +1,4 @@
 using SocialMedia.Core.RepositoryContracts;
-
 using SocialMedia.Application.Abstractions.Messaging;
 using SocialMedia.Application.Dtos;
 using SocialMedia.Application.ServiceContracts;
@@ -7,6 +6,7 @@ using SocialMedia.Core.Abstractions;
 using SocialMedia.Core.Entities;
 using SocialMedia.Core.Enumerations;
 using SocialMedia.Core.Errors;
+using SocialMedia.Core.Events.Posts;
 
 namespace SocialMedia.Application.Posts.Commands.Create;
 
@@ -16,9 +16,8 @@ public class CreatePostCommandHandler(IUserService userService, IFileUploader fi
     {
         var user = userService.GetAuthenticatedUser();
         if (user == null)
-        {
             return Result.Failure<PostDto>(UserErrors.Unauthenticated);
-        }
+
         var post = new Post
         {
             Content = request.Content,
@@ -36,7 +35,18 @@ public class CreatePostCommandHandler(IUserService userService, IFileUploader fi
             });
         }
         unitOfWork.Posts.Add(post);
+        post.RaiseDomainEvent(() => new PostCreatedDomainEvent(
+            post.Id,
+            user.Id,
+            user.Name,
+            user.Email,
+            user.AvatarUrl,
+            post.Content,
+            post.CreatedAt,
+            post.Attachments.Select(a => new PostAttachmentData(a.Id, a.Url, a.AttachmentType)).ToList()
+        ));
         await unitOfWork.SaveChangesAsync();
+
         return new PostDto
         {
             Id = post.Id,

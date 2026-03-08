@@ -2,7 +2,7 @@ using System;
 
 namespace SocialMedia.Core.Entities;
 
-public class Message
+public class Message : Entity
 {
     public int Id { get; set; }
     public Guid GroupId { get; set; }

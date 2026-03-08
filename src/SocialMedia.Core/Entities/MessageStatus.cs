@@ -3,7 +3,7 @@ using SocialMedia.Core.Enumerations;
 
 namespace SocialMedia.Core.Entities;
 
-public class MessageStatus
+public class MessageStatus : Entity
 {
     public int MessageId { get; set; }
     public int RecieverId { get; set; }

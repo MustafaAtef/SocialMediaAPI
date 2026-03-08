@@ -126,8 +126,30 @@ public class AppDbContext : DbContext
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
+        // If we're already inside an ambient transaction (e.g. unit-of-work), just piggy-back on it.
+        if (Database.CurrentTransaction is not null)
+        {
+            int r = await base.SaveChangesAsync(cancellationToken);
+            _addDomainEventsAsOutboxMessages();
+            await base.SaveChangesAsync(cancellationToken);
+            return r;
+        }
+
+        // Otherwise open our own transaction so both the entity rows and the
+        // outbox messages land atomically in the database.
+        await using var tx = await Database.BeginTransactionAsync(cancellationToken);
+
+        // 1. Persist entities — EF now back-fills database-generated IDs onto the objects.
+        int result = await base.SaveChangesAsync(cancellationToken);
+
+        // 2. Collect domain events; IDs are real values at this point.
         _addDomainEventsAsOutboxMessages();
-        return await base.SaveChangesAsync(cancellationToken);
+
+        // 3. Persist outbox messages within the same transaction.
+        await base.SaveChangesAsync(cancellationToken);
+
+        await tx.CommitAsync(cancellationToken);
+        return result;
     }
 
     private void _addDomainEventsAsOutboxMessages()

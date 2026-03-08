@@ -3,7 +3,7 @@ using SocialMedia.Core.Enumerations;
 
 namespace SocialMedia.Core.Entities;
 
-public class PostAttachment
+public class PostAttachment : Entity
 {
     public int Id { get; set; }
     public AttachmentType AttachmentType { get; set; }

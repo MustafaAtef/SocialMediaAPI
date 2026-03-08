@@ -2,7 +2,7 @@ using SocialMedia.Core.Enumerations;
 
 namespace SocialMedia.Core.Entities;
 
-public class CommentReact
+public class CommentReact : Entity
 {
     public int Id { get; set; }
     public int CommentId { get; set; }

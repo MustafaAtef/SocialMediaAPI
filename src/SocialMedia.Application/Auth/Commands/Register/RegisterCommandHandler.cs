@@ -1,14 +1,13 @@
 using SocialMedia.Application.Common;
 using SocialMedia.Core.RepositoryContracts;
-
 using Microsoft.Extensions.Configuration;
-
 using SocialMedia.Application.Abstractions.Messaging;
 using SocialMedia.Application.Dtos;
 using SocialMedia.Application.ServiceContracts;
 using SocialMedia.Core.Abstractions;
 using SocialMedia.Core.Entities;
 using SocialMedia.Core.Errors;
+using SocialMedia.Core.Events.Users;
 
 namespace SocialMedia.Application.Auth.Commands.Register;
 
@@ -55,6 +54,11 @@ public class RegisterCommandHandler(
         }
 
         unitOfWork.Users.Add(newUser);
+        newUser.RaiseDomainEvent(() => new UserCreatedDomainEvent(
+            newUser.Id,
+            $"{newUser.FirstName} {newUser.LastName}",
+            newUser.Email,
+            newUser.Avatar?.Url ?? string.Empty));
         await unitOfWork.SaveChangesAsync();
 
         // REFACTOR: use domain events instead of directly enqueueing email sending task here

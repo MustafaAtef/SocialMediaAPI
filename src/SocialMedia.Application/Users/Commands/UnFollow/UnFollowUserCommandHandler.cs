@@ -1,9 +1,9 @@
 using SocialMedia.Core.RepositoryContracts;
-
 using SocialMedia.Application.Abstractions.Messaging;
 using SocialMedia.Application.ServiceContracts;
 using SocialMedia.Core.Abstractions;
 using SocialMedia.Core.Errors;
+using SocialMedia.Core.Events.UserFollows;
 
 namespace SocialMedia.Application.Users.Commands.UnFollow;
 
@@ -32,6 +32,7 @@ public class UnFollowUserCommandHandler(IUserService userService, IUnitOfWork un
         unitOfWork.FollowersFollowings.Remove(existingFollow);
         followerUser.FollowingCount--;
         followingUser.FollowersCount--;
+        existingFollow.RaiseDomainEvent(() => new UserUnfollowedDomainEvent(existingFollow.FollowerId, existingFollow.FollowingId));
         await unitOfWork.SaveChangesAsync();
 
         return Result.Success();

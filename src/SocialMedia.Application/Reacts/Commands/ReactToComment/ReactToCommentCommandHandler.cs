@@ -1,11 +1,11 @@
 using SocialMedia.Core.RepositoryContracts;
-
 using SocialMedia.Application.Abstractions.Messaging;
 using SocialMedia.Application.Dtos;
 using SocialMedia.Application.ServiceContracts;
 using SocialMedia.Core.Abstractions;
 using SocialMedia.Core.Entities;
 using SocialMedia.Core.Errors;
+using SocialMedia.Core.Events.CommentReacts;
 
 namespace SocialMedia.Application.Reacts.Commands.ReactToComment;
 
@@ -32,6 +32,7 @@ public class ReactToCommentCommandHandler(IUserService userService, IUnitOfWork 
         if (commentReact != null)
         {
             commentReact.ReactType = request.ReactType;
+            commentReact.RaiseDomainEvent(() => new CommentReactUpdatedDomainEvent(commentReact.Id, commentReact.ReactType));
         }
         else
         {
@@ -44,6 +45,10 @@ public class ReactToCommentCommandHandler(IUserService userService, IUnitOfWork 
             };
             comment.ReactionsCount++;
             unitOfWork.CommentReacts.Add(commentReact);
+            commentReact.RaiseDomainEvent(() => new CommentReactAddedDomainEvent(
+                commentReact.Id, commentReact.CommentId, user.Id,
+                user.Name, user.Email, user.AvatarUrl,
+                commentReact.ReactType, commentReact.CreatedAt));
         }
 
         await unitOfWork.SaveChangesAsync();
