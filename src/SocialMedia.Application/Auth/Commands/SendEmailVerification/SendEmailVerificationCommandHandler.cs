@@ -4,7 +4,6 @@ using SocialMedia.Core.RepositoryContracts;
 using Microsoft.Extensions.Configuration;
 
 using SocialMedia.Application.Abstractions.Messaging;
-using SocialMedia.Application.Dtos;
 using SocialMedia.Application.ServiceContracts;
 using SocialMedia.Core.Abstractions;
 using SocialMedia.Core.Errors;
@@ -13,7 +12,7 @@ namespace SocialMedia.Application.Auth.Commands.SendEmailVerification;
 
 public class SendEmailVerificationCommandHandler(
     IUnitOfWork unitOfWork,
-    IEmailProcessorQueue emailProcessorQueue,
+    IEmailOutboxWriter emailOutboxWriter,
     IConfiguration configuration) : ICommandHandler<SendEmailVerificationCommand>
 {
     public async Task<Result> Handle(SendEmailVerificationCommand request, CancellationToken cancellationToken)
@@ -31,14 +30,12 @@ public class SendEmailVerificationCommandHandler(
             configuration["EmailVerificationTokenExpiryMinutes"] != null
                 ? int.Parse(configuration["EmailVerificationTokenExpiryMinutes"] ?? "")
                 : 15);
-        await unitOfWork.SaveChangesAsync();
 
-        // Refactor: raise a domain event to trigger email sending instead of directly enqueuing the email
-        var cts = new CancellationTokenSource();
-        cts.CancelAfter(TimeSpan.FromSeconds(10));
-        var success = await emailProcessorQueue.WriteAsync(new EmailDto { User = user, Type = EmailType.Verification }, cts.Token);
-        if (!success)
-            return Result.Failure(AuthErrors.ServerBusy);
+        emailOutboxWriter.QueueVerificationEmail(
+            user.Email,
+            user.EmailVerificationToken!,
+            user.EmailVerificationTokenExpiryTime!.Value);
+        await unitOfWork.SaveChangesAsync();
 
         return Result.Success();
     }

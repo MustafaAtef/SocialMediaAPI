@@ -2,7 +2,6 @@
 
   <ItemGroup>
     <Folder Include="Abstractions/" />
-    <Folder Include="Events/" />
   </ItemGroup>
 
   <ItemGroup>

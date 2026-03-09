@@ -39,7 +39,6 @@ public static class DependencyInjection
             .AddFileUploadServices()
             .AddBackgroundServices();
 
-
         return services;
     }
 
@@ -118,8 +117,8 @@ public static class DependencyInjection
 
     private static IServiceCollection AddEmailServices(this IServiceCollection services)
     {
-        services.AddSingleton<IEmailProcessorQueue, EmailProcessorQueue>();
         services.AddScoped<IEmailService, EmailService>();
+        services.AddScoped<IEmailOutboxWriter, EmailOutboxWriter>();
 
         return services;
     }
@@ -134,7 +133,7 @@ public static class DependencyInjection
 
     private static IServiceCollection AddBackgroundServices(this IServiceCollection services)
     {
-        services.AddHostedService<EmailProcessorService>();
+        services.AddHostedService<EmailOutboxProcessor>();
         services.AddHostedService<ProjectionOutboxProcessor>();
 
         return services;

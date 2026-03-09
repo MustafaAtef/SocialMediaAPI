@@ -2,7 +2,7 @@ using SocialMedia.Core.Abstractions;
 
 namespace SocialMedia.Core.Events.Users;
 
-public sealed record UserCreatedDomainEvent(
+public sealed record UserRegisteredDomainEvent(
     int UserId,
     string UserName,
     string UserEmail,

@@ -10,6 +10,19 @@ namespace SocialMedia.Infrastructure.Database.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            // ── UserProjections ──────────────────────────────────────────────
+            migrationBuilder.Sql(@"
+                CREATE TABLE UserProjections (
+                    UserId          INT             NOT NULL,
+                    Name            NVARCHAR(200)   NOT NULL,
+                    Email           NVARCHAR(200)   NOT NULL,
+                    AvatarUrl       NVARCHAR(500)   NOT NULL DEFAULT '',
+                    FollowersCount  INT             NOT NULL DEFAULT 0,
+                    FollowingCount  INT             NOT NULL DEFAULT 0,
+                    CONSTRAINT PK_UserProjections PRIMARY KEY (UserId)
+                );
+            ");
+
             // ── PostProjections ──────────────────────────────────────────────
             migrationBuilder.Sql(@"
                 CREATE TABLE PostProjections (
@@ -186,6 +199,7 @@ namespace SocialMedia.Infrastructure.Database.Migrations
             migrationBuilder.Sql("DROP TABLE IF EXISTS CommentProjections;");
             migrationBuilder.Sql("DROP TABLE IF EXISTS PostAttachmentProjections;");
             migrationBuilder.Sql("DROP TABLE IF EXISTS PostProjections;");
+            migrationBuilder.Sql("DROP TABLE IF EXISTS UserProjections;");
         }
     }
 }

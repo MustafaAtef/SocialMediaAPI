@@ -14,14 +14,13 @@ public class AppDbContext : DbContext
     {
         TypeNameHandling = TypeNameHandling.All
     };
+
     public AppDbContext()
     {
-
     }
 
     public AppDbContext(DbContextOptions dbContextOptions) : base(dbContextOptions)
     {
-
     }
 
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -118,7 +117,17 @@ public class AppDbContext : DbContext
             entity.Property(om => om.Payload).IsRequired().HasColumnType("nvarchar(max)");
             entity.HasIndex(om => new { om.ProcessedOn, om.OccurredOn }).HasFilter("[ProcessedOn] IS NULL");
         });
+
+        modelBuilder.Entity<EmailOutboxMessage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.To).IsRequired().HasMaxLength(320);
+            entity.Property(e => e.Subject).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.HtmlBody).IsRequired().HasColumnType("nvarchar(max)");
+            entity.HasIndex(e => new { e.ProcessedOn, e.CreatedAt }).HasFilter("[ProcessedOn] IS NULL");
+        });
     }
+    public DbSet<EmailOutboxMessage> EmailOutboxMessages { get; set; } = null!;
     public DbSet<User> Users { get; set; } = null!;
     public DbSet<Post> Posts { get; set; } = null!;
     public DbSet<Comment> Comments { get; set; } = null!;
@@ -155,20 +164,20 @@ public class AppDbContext : DbContext
     private void _addDomainEventsAsOutboxMessages()
     {
         var outboxMessages = ChangeTracker.Entries<Entity>()
-        .Select(entry => entry.Entity)
-        .SelectMany(entity =>
-        {
-            var domainEvents = entity.GetDomainEvents();
-            entity.ClearDomainEvents();
-            return domainEvents;
-        })
-        .Select(domainEvent => new OutboxMessage
-        {
-            Id = Guid.NewGuid(),
-            Type = domainEvent.GetType().Name!,
-            Payload = JsonConvert.SerializeObject(domainEvent, jsonSerializerSettings),
-            OccurredOn = DateTime.UtcNow
-        }).ToList();
+            .Select(entry => entry.Entity)
+            .SelectMany(entity =>
+            {
+                var domainEvents = entity.GetDomainEvents();
+                entity.ClearDomainEvents();
+                return domainEvents;
+            })
+            .Select(domainEvent => new OutboxMessage
+            {
+                Id = Guid.NewGuid(),
+                Type = domainEvent.GetType().Name!,
+                Payload = JsonConvert.SerializeObject(domainEvent, jsonSerializerSettings),
+                OccurredOn = DateTime.UtcNow
+            }).ToList();
 
         AddRange(outboxMessages);
     }

@@ -19,16 +19,18 @@ public class AuthService : IAuthService
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly IConfiguration _configuration;
     private readonly IFileUploader _fileUploader;
-    private readonly IEmailProcessorQueue _emailProcessorQueue;
-    public AuthService(IUnitOfWork unitOfWork, IPasswordHasher passwordHasher, IJwtService jwtService, IHttpContextAccessor httpContextAccessor, IEmailProcessorQueue emailProcessorQueue, IConfiguration configuration, IFileUploader fileUploader)
+
+    private readonly IEmailOutboxWriter _emailOutboxWriter;
+
+    public AuthService(IUnitOfWork unitOfWork, IPasswordHasher passwordHasher, IJwtService jwtService, IHttpContextAccessor httpContextAccessor, IConfiguration configuration, IFileUploader fileUploader, IEmailOutboxWriter emailOutboxWriter)
     {
         _unitOfWork = unitOfWork;
         _passwordHasher = passwordHasher;
         _jwtService = jwtService;
         _httpContextAccessor = httpContextAccessor;
-        _emailProcessorQueue = emailProcessorQueue;
         _configuration = configuration;
         _fileUploader = fileUploader;
+        _emailOutboxWriter = emailOutboxWriter;
     }
 
     public async Task<AuthenticatedUserDto> RegisterAsync(RegisterRequestDto registerRequest)
@@ -62,14 +64,11 @@ public class AuthService : IAuthService
             };
         }
         _unitOfWork.Users.Add(newUser);
+        _emailOutboxWriter.QueueVerificationEmail(
+            newUser.Email,
+            newUser.EmailVerificationToken!,
+            newUser.EmailVerificationTokenExpiryTime!.Value);
         await _unitOfWork.SaveChangesAsync();
-
-        // [SOLVED] bottelneck here because sending the email will block the regesteration response until the email is sent
-        // [APPLIED] a better approach would be to use a background service with a message queue to send the email in background seperate from the request pipeline
-        var cts = new CancellationTokenSource();
-        cts.CancelAfter(TimeSpan.FromSeconds(10));
-        var success = await _emailProcessorQueue.WriteAsync(new EmailDto { User = newUser, Type = EmailType.Verification }, cts.Token);
-        if (!success) throw new BadRequestException("Server is busy now try again later!");
 
         return new AuthenticatedUserDto
         {
@@ -180,12 +179,12 @@ public class AuthService : IAuthService
         var token = CryptoHelper.GenerateRandomToken();
         user.PasswordResetToken = token;
         user.PasswordResetTokenExpiryTime = DateTime.Now.AddMinutes(_configuration["PasswordResetTokenExpiryMinutes"] != null ? int.Parse(_configuration["PasswordResetTokenExpiryMinutes"] ?? "") : 15);
-        await _unitOfWork.SaveChangesAsync();
 
-        var cts = new CancellationTokenSource();
-        cts.CancelAfter(TimeSpan.FromSeconds(10));
-        var success = await _emailProcessorQueue.WriteAsync(new EmailDto { User = user, Type = EmailType.ForgetPassword }, cts.Token);
-        if (!success) throw new BadRequestException("Server is busy now try again later!");
+        _emailOutboxWriter.QueuePasswordResetEmail(
+            user.Email,
+            user.PasswordResetToken!,
+            user.PasswordResetTokenExpiryTime!.Value);
+        await _unitOfWork.SaveChangesAsync();
     }
     public async Task<bool> IsPasswordResetTokenValidAsync(string token)
     {
@@ -224,11 +223,12 @@ public class AuthService : IAuthService
 
         user.EmailVerificationToken = CryptoHelper.GenerateRandomToken();
         user.EmailVerificationTokenExpiryTime = DateTime.Now.AddMinutes(_configuration["EmailVerificationTokenExpiryMinutes"] != null ? int.Parse(_configuration["EmailVerificationTokenExpiryMinutes"] ?? "") : 15);
+
+        _emailOutboxWriter.QueueVerificationEmail(
+            user.Email,
+            user.EmailVerificationToken!,
+            user.EmailVerificationTokenExpiryTime!.Value);
         await _unitOfWork.SaveChangesAsync();
-        var cts = new CancellationTokenSource();
-        cts.CancelAfter(TimeSpan.FromSeconds(10));
-        var success = await _emailProcessorQueue.WriteAsync(new EmailDto { User = user, Type = EmailType.Verification }, cts.Token);
-        if (!success) throw new BadRequestException("Server is busy now try again later!");
     }
 
     public async Task<bool> VerifyEmailAsync(string token)

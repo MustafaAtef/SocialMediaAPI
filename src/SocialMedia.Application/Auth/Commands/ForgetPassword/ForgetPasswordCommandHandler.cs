@@ -4,7 +4,6 @@ using SocialMedia.Core.RepositoryContracts;
 using Microsoft.Extensions.Configuration;
 
 using SocialMedia.Application.Abstractions.Messaging;
-using SocialMedia.Application.Dtos;
 using SocialMedia.Application.ServiceContracts;
 using SocialMedia.Core.Abstractions;
 using SocialMedia.Core.Errors;
@@ -13,7 +12,7 @@ namespace SocialMedia.Application.Auth.Commands.ForgetPassword;
 
 public class ForgetPasswordCommandHandler(
     IUnitOfWork unitOfWork,
-    IEmailProcessorQueue emailProcessorQueue,
+    IEmailOutboxWriter emailOutboxWriter,
     IConfiguration configuration) : ICommandHandler<ForgetPasswordCommand>
 {
     public async Task<Result> Handle(ForgetPasswordCommand request, CancellationToken cancellationToken)
@@ -28,13 +27,11 @@ public class ForgetPasswordCommandHandler(
             configuration["PasswordResetTokenExpiryMinutes"] != null
                 ? int.Parse(configuration["PasswordResetTokenExpiryMinutes"] ?? "")
                 : 15);
+        emailOutboxWriter.QueuePasswordResetEmail(
+            user.Email,
+            user.PasswordResetToken!,
+            user.PasswordResetTokenExpiryTime!.Value);
         await unitOfWork.SaveChangesAsync();
-        // REFACTOR: use a domain event to trigger the email sending instead of directly writing to the queue here
-        var cts = new CancellationTokenSource();
-        cts.CancelAfter(TimeSpan.FromSeconds(10));
-        var success = await emailProcessorQueue.WriteAsync(new EmailDto { User = user, Type = EmailType.ForgetPassword }, cts.Token);
-        if (!success)
-            return Result.Failure(AuthErrors.ServerBusy);
 
         return Result.Success();
     }

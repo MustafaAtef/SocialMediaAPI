@@ -16,7 +16,7 @@ public class RegisterCommandHandler(
     IPasswordHasher passwordHasher,
     IJwtService jwtService,
     IFileUploader fileUploader,
-    IEmailProcessorQueue emailProcessorQueue,
+    IEmailOutboxWriter emailOutboxWriter,
     IConfiguration configuration) : ICommandHandler<RegisterCommand, AuthenticatedUserDto>
 {
     public async Task<Result<AuthenticatedUserDto>> Handle(RegisterCommand request, CancellationToken cancellationToken)
@@ -43,6 +43,7 @@ public class RegisterCommandHandler(
                 ? int.Parse(configuration["EmailVerificationTokenExpiryMinutes"] ?? "")
                 : 15);
 
+        // REFACTOR
         if (request.Avatar != null)
         {
             var uploadedImage = await fileUploader.UploadAsync(request.Avatar, "users-avatars");
@@ -54,19 +55,17 @@ public class RegisterCommandHandler(
         }
 
         unitOfWork.Users.Add(newUser);
-        newUser.RaiseDomainEvent(() => new UserCreatedDomainEvent(
+        newUser.RaiseDomainEvent(() => new UserRegisteredDomainEvent(
             newUser.Id,
             $"{newUser.FirstName} {newUser.LastName}",
             newUser.Email,
             newUser.Avatar?.Url ?? string.Empty));
-        await unitOfWork.SaveChangesAsync();
 
-        // REFACTOR: use domain events instead of directly enqueueing email sending task here
-        var cts = new CancellationTokenSource();
-        cts.CancelAfter(TimeSpan.FromSeconds(10));
-        var success = await emailProcessorQueue.WriteAsync(new EmailDto { User = newUser, Type = EmailType.Verification }, cts.Token);
-        if (!success)
-            return Result.Failure<AuthenticatedUserDto>(AuthErrors.ServerBusy);
+        emailOutboxWriter.QueueVerificationEmail(
+            newUser.Email,
+            newUser.EmailVerificationToken!,
+            newUser.EmailVerificationTokenExpiryTime!.Value);
+        await unitOfWork.SaveChangesAsync();
 
         return Result.Success(new AuthenticatedUserDto
         {

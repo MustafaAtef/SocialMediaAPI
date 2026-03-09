@@ -17,7 +17,10 @@ public sealed class UserUnfollowedDomainEventHandler(ITransactionContext transac
 
         await connection.ExecuteAsync("""
             DELETE FROM UserFollowProjections
-            WHERE FollowerId = @FollowerId AND FollowingId = @FollowingId
+            WHERE FollowerId = @FollowerId AND FollowingId = @FollowingId;
+
+            UPDATE UserProjections SET FollowingCount = FollowingCount - 1 WHERE UserId = @FollowerId;
+            UPDATE UserProjections SET FollowersCount = FollowersCount - 1 WHERE UserId = @FollowingId;
             """,
             new { notification.FollowerId, notification.FollowingId }, transaction);
     }

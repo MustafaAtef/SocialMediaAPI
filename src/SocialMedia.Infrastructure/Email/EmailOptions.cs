@@ -9,7 +9,13 @@ public class EmailOptions
     public string From { get; set; }
     public string Username { get; set; }
     public string Password { get; set; }
-    public string EmailVerificationUrl { get; set; }
-    public string PasswordResetUrl { get; set; }
+    public string BaseUrl { get; set; }
+    public string EmailVerificationPath { get; set; }
+    public string PasswordResetPath { get; set; }
 
+    public string BuildVerificationUrl(string token) =>
+        BaseUrl + EmailVerificationPath.Replace("{token}", token);
+
+    public string BuildPasswordResetUrl(string token) =>
+        BaseUrl + PasswordResetPath.Replace("{token}", token);
 }

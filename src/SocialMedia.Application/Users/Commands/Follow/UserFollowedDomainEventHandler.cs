@@ -21,7 +21,10 @@ public sealed class UserFollowedDomainEventHandler(ITransactionContext transacti
                  FollowingName, FollowingEmail, FollowingAvatarUrl, CreatedAt)
             VALUES
                 (@FollowerId, @FollowingId, @FollowerName, @FollowerEmail, @FollowerAvatarUrl,
-                 @FollowingName, @FollowingEmail, @FollowingAvatarUrl, @CreatedAt)
+                 @FollowingName, @FollowingEmail, @FollowingAvatarUrl, @CreatedAt);
+
+            UPDATE UserProjections SET FollowingCount = FollowingCount + 1 WHERE UserId = @FollowerId;
+            UPDATE UserProjections SET FollowersCount = FollowersCount + 1 WHERE UserId = @FollowingId;
             """,
             new
             {

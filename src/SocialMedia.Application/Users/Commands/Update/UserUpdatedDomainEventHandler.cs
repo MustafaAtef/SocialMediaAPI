@@ -16,6 +16,10 @@ public sealed class UserUpdatedDomainEventHandler(ITransactionContext transactio
         var transaction = transactionContext.Transaction;
 
         await connection.ExecuteAsync("""
+            UPDATE UserProjections
+            SET Name = @UserName, AvatarUrl = @UserAvatarUrl
+            WHERE UserId = @UserId;
+
             UPDATE PostProjections
             SET UserName = @UserName, UserAvatarUrl = @UserAvatarUrl
             WHERE UserId = @UserId;
