@@ -1,7 +1,8 @@
 using SocialMedia.Core.RepositoryContracts;
 using SocialMedia.Application.Abstractions.Messaging;
-using SocialMedia.Application.Dtos;
+using SocialMedia.Application.Posts.Responses;
 using SocialMedia.Application.ServiceContracts;
+using SocialMedia.Application.Users.Responses;
 using SocialMedia.Core.Abstractions;
 using SocialMedia.Core.Entities;
 using SocialMedia.Core.Enumerations;
@@ -11,26 +12,27 @@ using SocialMedia.Core.Events.Posts;
 
 namespace SocialMedia.Application.Posts.Commands.Update;
 
-public class UpdatePostCommandHandler(IUserService userService, IFileUploader fileUploader, IUnitOfWork unitOfWork) : ICommandHandler<UpdatePostCommand, PostDto>
+public class UpdatePostCommandHandler(IUserService userService, IFileUploader fileUploader, IUnitOfWork unitOfWork) : ICommandHandler<UpdatePostCommand, PostResponse>
 {
-    public async Task<Result<PostDto>> Handle(UpdatePostCommand request, CancellationToken cancellationToken)
+    public async Task<Result<PostResponse>> Handle(UpdatePostCommand request, CancellationToken cancellationToken)
     {
         // check if the logged in user is the owner of the post
         var user = userService.GetAuthenticatedUser();
         if (user == null)
         {
-            return Result.Failure<PostDto>(UserErrors.Unauthenticated);
+            return Result.Failure<PostResponse>(UserErrors.Unauthenticated);
         }
         var post = await unitOfWork.Posts.GetAsync(p => p.Id == request.PostId, ["Attachments"]);
         if (post == null)
         {
-            return Result.Failure<PostDto>(PostErrors.NotFound);
+            return Result.Failure<PostResponse>(PostErrors.NotFound);
         }
         if (user.Id != post.UserId)
         {
             // REFACTOR 
             throw new UnAuthorizedException("User not authorized to update this post.");
         }
+
         // update the content of the post then delete all deleted attachments ids and insert any new attachments 
         if (request.Content is not null) post.Content = request.Content;
         post.UpdatedAt = DateTime.Now;
@@ -76,16 +78,17 @@ public class UpdatePostCommandHandler(IUserService userService, IFileUploader fi
         ));
         await unitOfWork.SaveChangesAsync();
 
-        return new PostDto
+        return new PostResponse
         {
             Id = post.Id,
             Content = post.Content,
-            Attachments = post.Attachments?.Select(a => new AttachmentDto()
+            Attachments = post.Attachments?.Select(a => new AttachmentResponse()
             {
                 Id = a.Id,
-                Url = a.Url
-            }).ToList() ?? new List<AttachmentDto>(),
-            CreatedBy = new UserDto
+                Url = a.Url,
+                Type = a.AttachmentType.ToString()
+            }).ToList() ?? new List<AttachmentResponse>(),
+            Author = new UserResponse
             {
                 Id = user.Id,
                 Name = user.Name,

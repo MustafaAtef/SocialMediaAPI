@@ -1,7 +1,8 @@
 using SocialMedia.Core.RepositoryContracts;
 using SocialMedia.Application.Abstractions.Messaging;
-using SocialMedia.Application.Dtos;
+using SocialMedia.Application.Comments.Responses;
 using SocialMedia.Application.ServiceContracts;
+using SocialMedia.Application.Users.Responses;
 using SocialMedia.Core.Abstractions;
 using SocialMedia.Core.Entities;
 using SocialMedia.Core.Errors;
@@ -10,25 +11,25 @@ using SocialMedia.Core.Events.Comments;
 namespace SocialMedia.Application.Comments.Commands.Reply;
 
 public class ReplyCommentCommandHandler(IUserService userService, IUnitOfWork unitOfWork)
-    : ICommandHandler<ReplyCommentCommand, CommentWithoutRepliesDto>
+    : ICommandHandler<ReplyCommentCommand, CommentResponse>
 {
-    public async Task<Result<CommentWithoutRepliesDto>> Handle(ReplyCommentCommand request, CancellationToken cancellationToken)
+    public async Task<Result<CommentResponse>> Handle(ReplyCommentCommand request, CancellationToken cancellationToken)
     {
         var user = userService.GetAuthenticatedUser();
         if (user == null)
-            return Result.Failure<CommentWithoutRepliesDto>(UserErrors.Unauthenticated);
+            return Result.Failure<CommentResponse>(UserErrors.Unauthenticated);
 
         var post = await unitOfWork.Posts.GetAsync(p => p.Id == request.PostId);
         if (post == null)
-            return Result.Failure<CommentWithoutRepliesDto>(PostErrors.NotFound);
+            return Result.Failure<CommentResponse>(PostErrors.NotFound);
 
         var parentComment = await unitOfWork.Comments.GetAsync(
             c => c.Id == request.ParentCommentId && c.PostId == request.PostId);
         if (parentComment == null)
-            return Result.Failure<CommentWithoutRepliesDto>(CommentErrors.ParentNotFound);
+            return Result.Failure<CommentResponse>(CommentErrors.ParentNotFound);
 
         if (parentComment.ParentComment is not null)
-            return Result.Failure<CommentWithoutRepliesDto>(CommentErrors.ReplyOnReplyNotAllowed);
+            return Result.Failure<CommentResponse>(CommentErrors.ReplyOnReplyNotAllowed);
 
         var reply = new Comment
         {
@@ -49,12 +50,12 @@ public class ReplyCommentCommandHandler(IUserService userService, IUnitOfWork un
             reply.Content, reply.CreatedAt));
         await unitOfWork.SaveChangesAsync();
 
-        return Result.Success(new CommentWithoutRepliesDto
+        return Result.Success(new CommentResponse
         {
             Id = reply.Id,
             ParentCommentId = parentComment.Id,
             PostId = reply.PostId,
-            CreatedBy = new UserDto
+            CreatedBy = new UserResponse
             {
                 Id = user.Id,
                 Name = user.Name,
@@ -63,6 +64,7 @@ public class ReplyCommentCommandHandler(IUserService userService, IUnitOfWork un
             },
             Content = reply.Content,
             ReactsCount = 0,
+            RepliesCount = 0,
             CreatedAt = reply.CreatedAt,
             UpdatedAt = reply.UpdatedAt
         });

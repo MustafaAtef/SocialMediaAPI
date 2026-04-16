@@ -3,9 +3,9 @@ using Dapper;
 using SocialMedia.Application.Abstractions.Data;
 using SocialMedia.Application.Abstractions.Messaging;
 using SocialMedia.Application.Comments.Queries.Common.Projections;
-using SocialMedia.Application.Comments.Queries.Common.Responses;
+using SocialMedia.Application.Comments.Responses;
 using SocialMedia.Application.Dtos;
-using SocialMedia.Application.Users.Common.Responses;
+using SocialMedia.Application.Users.Responses;
 using SocialMedia.Core.Abstractions;
 
 namespace SocialMedia.Application.Comments.Queries.GetPagedComments;
@@ -27,6 +27,7 @@ public sealed class GetPagedCommentsQueryHandler(ISqlConnectionFactory sqlConnec
             SELECT 
                 CommentId AS Id, 
                 PostId, 
+                ParentCommentId,
                 Content,
                 UserId, 
                 UserName, 
@@ -64,6 +65,7 @@ public sealed class GetPagedCommentsQueryHandler(ISqlConnectionFactory sqlConnec
             var commentResponse = new CommentResponse
             {
                 Id = comment.Id,
+                ParentCommentId = comment.ParentCommentId,
                 PostId = comment.PostId,
                 Content = comment.Content,
                 CreatedBy = new UserResponse

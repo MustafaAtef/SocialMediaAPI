@@ -1,7 +1,7 @@
 using SocialMedia.Core.RepositoryContracts;
 using SocialMedia.Application.Abstractions.Messaging;
-using SocialMedia.Application.Dtos;
 using SocialMedia.Application.ServiceContracts;
+using SocialMedia.Application.Users.Responses;
 using SocialMedia.Core.Abstractions;
 using SocialMedia.Core.Entities;
 using SocialMedia.Core.Errors;
@@ -10,17 +10,17 @@ using SocialMedia.Core.Events.Users;
 namespace SocialMedia.Application.Users.Commands.Update;
 
 public class UpdateUserCommandHandler(IUserService userService, IUnitOfWork unitOfWork, IFileUploader fileUploader)
-    : ICommandHandler<UpdateUserCommand, UserDto>
+    : ICommandHandler<UpdateUserCommand, UserResponse>
 {
-    public async Task<Result<UserDto>> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
+    public async Task<Result<UserResponse>> Handle(UpdateUserCommand request, CancellationToken cancellationToken)
     {
         var tokenUser = userService.GetAuthenticatedUser();
         if (tokenUser is null)
-            return Result.Failure<UserDto>(UserErrors.Unauthenticated);
+            return Result.Failure<UserResponse>(UserErrors.Unauthenticated);
 
         var user = await unitOfWork.Users.GetAsync(u => u.Id == tokenUser.Id, ["Avatar"]);
         if (user is null)
-            return Result.Failure<UserDto>(UserErrors.NotFound);
+            return Result.Failure<UserResponse>(UserErrors.NotFound);
 
         var oldAvatar = user.Avatar;
 
@@ -46,7 +46,7 @@ public class UpdateUserCommandHandler(IUserService userService, IUnitOfWork unit
         if (request.Avatar is not null && oldAvatar is not null)
             await fileUploader.DeleteAsync(oldAvatar.Url);
 
-        return Result.Success(new UserDto
+        return Result.Success(new UserResponse
         {
             Id = user.Id,
             Email = user.Email,

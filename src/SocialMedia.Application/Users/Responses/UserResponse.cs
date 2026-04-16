@@ -1,4 +1,4 @@
-namespace SocialMedia.Application.Users.Common.Responses;
+namespace SocialMedia.Application.Users.Responses;
 
 public class UserResponse
 {

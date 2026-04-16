@@ -1,7 +1,7 @@
-using SocialMedia.Application.Users.Common.Responses;
+using SocialMedia.Application.Users.Responses;
 using SocialMedia.Core.Enumerations;
 
-namespace SocialMedia.Application.Reacts.Queries.Common.Responses;
+namespace SocialMedia.Application.Reacts.Responses;
 
 public class PostReactResponse
 {

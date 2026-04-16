@@ -1,6 +1,6 @@
 using SocialMedia.Application.Abstractions.Messaging;
 using SocialMedia.Application.Dtos;
-using SocialMedia.Application.Users.Common.Responses;
+using SocialMedia.Application.Users.Responses;
 
 namespace SocialMedia.Application.Users.Queries.GetPagedFollowing;
 

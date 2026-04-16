@@ -1,7 +1,8 @@
 using SocialMedia.Core.RepositoryContracts;
 using SocialMedia.Application.Abstractions.Messaging;
-using SocialMedia.Application.Dtos;
+using SocialMedia.Application.Reacts.Responses;
 using SocialMedia.Application.ServiceContracts;
+using SocialMedia.Application.Users.Responses;
 using SocialMedia.Core.Abstractions;
 using SocialMedia.Core.Entities;
 using SocialMedia.Core.Errors;
@@ -10,17 +11,17 @@ using SocialMedia.Core.Events.PostReacts;
 namespace SocialMedia.Application.Reacts.Commands.ReactToPost;
 
 public class ReactToPostCommandHandler(IUserService userService, IUnitOfWork unitOfWork)
-    : ICommandHandler<ReactToPostCommand, PostReactDto>
+    : ICommandHandler<ReactToPostCommand, PostReactResponse>
 {
-    public async Task<Result<PostReactDto>> Handle(ReactToPostCommand request, CancellationToken cancellationToken)
+    public async Task<Result<PostReactResponse>> Handle(ReactToPostCommand request, CancellationToken cancellationToken)
     {
         var user = userService.GetAuthenticatedUser();
         if (user == null)
-            return Result.Failure<PostReactDto>(UserErrors.Unauthenticated);
+            return Result.Failure<PostReactResponse>(UserErrors.Unauthenticated);
 
         var post = await unitOfWork.Posts.GetByIdAsync(request.PostId);
         if (post == null)
-            return Result.Failure<PostReactDto>(PostErrors.NotFound);
+            return Result.Failure<PostReactResponse>(PostErrors.NotFound);
 
         var postReact = await unitOfWork.PostReacts.GetAsync(pr => pr.PostId == request.PostId && pr.UserId == user.Id);
         if (postReact != null)
@@ -47,19 +48,19 @@ public class ReactToPostCommandHandler(IUserService userService, IUnitOfWork uni
 
         await unitOfWork.SaveChangesAsync();
 
-        return Result.Success(new PostReactDto
+        return Result.Success(new PostReactResponse
         {
             Id = postReact.Id,
             PostId = postReact.PostId,
-            ReactedBy = new UserDto
+            ReactedBy = new UserResponse
             {
                 Id = user.Id,
                 Name = user.Name,
                 Email = user.Email,
                 AvatarUrl = user.AvatarUrl
             },
-            ReactType = postReact.ReactType,
-            Name = postReact.ReactType.ToString(),
+            TypeNo = postReact.ReactType,
+            TypeName = postReact.ReactType.ToString(),
             CreatedAt = postReact.CreatedAt
         });
     }

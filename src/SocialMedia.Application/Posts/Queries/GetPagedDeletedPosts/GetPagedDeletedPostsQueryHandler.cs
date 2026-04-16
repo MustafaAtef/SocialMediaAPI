@@ -4,8 +4,8 @@ using SocialMedia.Application.Abstractions.Data;
 using SocialMedia.Application.Abstractions.Messaging;
 using SocialMedia.Application.Dtos;
 using SocialMedia.Application.Posts.Queries.Common.Projections;
-using SocialMedia.Application.Posts.Queries.Common.Responses;
-using SocialMedia.Application.Users.Common.Responses;
+using SocialMedia.Application.Posts.Responses;
+using SocialMedia.Application.Users.Responses;
 using SocialMedia.Core.Abstractions;
 
 namespace SocialMedia.Application.Posts.Queries.GetPagedDeletedPosts;

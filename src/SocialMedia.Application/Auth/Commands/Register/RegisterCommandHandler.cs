@@ -2,6 +2,7 @@ using SocialMedia.Application.Common;
 using SocialMedia.Core.RepositoryContracts;
 using Microsoft.Extensions.Configuration;
 using SocialMedia.Application.Abstractions.Messaging;
+using SocialMedia.Application.Auth.Responses;
 using SocialMedia.Application.Dtos;
 using SocialMedia.Application.ServiceContracts;
 using SocialMedia.Core.Abstractions;
@@ -17,13 +18,13 @@ public class RegisterCommandHandler(
     IJwtService jwtService,
     IFileUploader fileUploader,
     IEmailOutboxWriter emailOutboxWriter,
-    IConfiguration configuration) : ICommandHandler<RegisterCommand, AuthenticatedUserDto>
+    IConfiguration configuration) : ICommandHandler<RegisterCommand, AuthenticatedUserResponse>
 {
-    public async Task<Result<AuthenticatedUserDto>> Handle(RegisterCommand request, CancellationToken cancellationToken)
+    public async Task<Result<AuthenticatedUserResponse>> Handle(RegisterCommand request, CancellationToken cancellationToken)
     {
         var existing = await unitOfWork.Users.GetAsync(u => u.Email == request.Email);
         if (existing != null)
-            return Result.Failure<AuthenticatedUserDto>(UserErrors.AlreadyExists);
+            return Result.Failure<AuthenticatedUserResponse>(UserErrors.AlreadyExists);
 
         var newUser = new User
         {
@@ -67,7 +68,7 @@ public class RegisterCommandHandler(
             newUser.EmailVerificationTokenExpiryTime!.Value);
         await unitOfWork.SaveChangesAsync();
 
-        return Result.Success(new AuthenticatedUserDto
+        return Result.Success(new AuthenticatedUserResponse
         {
             Id = newUser.Id,
             Name = newUser.FirstName + " " + newUser.LastName,

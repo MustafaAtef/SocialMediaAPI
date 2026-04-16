@@ -1,4 +1,4 @@
-namespace SocialMedia.Application.Posts.Queries.Common.Responses;
+namespace SocialMedia.Application.Posts.Responses;
 
 public class AttachmentResponse
 {

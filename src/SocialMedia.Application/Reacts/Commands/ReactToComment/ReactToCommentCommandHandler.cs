@@ -1,7 +1,8 @@
 using SocialMedia.Core.RepositoryContracts;
 using SocialMedia.Application.Abstractions.Messaging;
-using SocialMedia.Application.Dtos;
+using SocialMedia.Application.Reacts.Responses;
 using SocialMedia.Application.ServiceContracts;
+using SocialMedia.Application.Users.Responses;
 using SocialMedia.Core.Abstractions;
 using SocialMedia.Core.Entities;
 using SocialMedia.Core.Errors;
@@ -10,21 +11,21 @@ using SocialMedia.Core.Events.CommentReacts;
 namespace SocialMedia.Application.Reacts.Commands.ReactToComment;
 
 public class ReactToCommentCommandHandler(IUserService userService, IUnitOfWork unitOfWork)
-    : ICommandHandler<ReactToCommentCommand, CommentReactDto>
+    : ICommandHandler<ReactToCommentCommand, CommentReactResponse>
 {
-    public async Task<Result<CommentReactDto>> Handle(ReactToCommentCommand request, CancellationToken cancellationToken)
+    public async Task<Result<CommentReactResponse>> Handle(ReactToCommentCommand request, CancellationToken cancellationToken)
     {
         var user = userService.GetAuthenticatedUser();
         if (user is null)
-            return Result.Failure<CommentReactDto>(UserErrors.Unauthenticated);
+            return Result.Failure<CommentReactResponse>(UserErrors.Unauthenticated);
 
         var post = await unitOfWork.Posts.GetByIdAsync(request.PostId);
         if (post is null)
-            return Result.Failure<CommentReactDto>(PostErrors.NotFound);
+            return Result.Failure<CommentReactResponse>(PostErrors.NotFound);
 
         var comment = await unitOfWork.Comments.GetByIdAsync(request.CommentId);
         if (comment is null)
-            return Result.Failure<CommentReactDto>(CommentErrors.NotFound);
+            return Result.Failure<CommentReactResponse>(CommentErrors.NotFound);
 
         var commentReact = await unitOfWork.CommentReacts.GetAsync(
             cr => cr.CommentId == request.CommentId && cr.UserId == user.Id);
@@ -53,19 +54,19 @@ public class ReactToCommentCommandHandler(IUserService userService, IUnitOfWork 
 
         await unitOfWork.SaveChangesAsync();
 
-        return Result.Success(new CommentReactDto
+        return Result.Success(new CommentReactResponse
         {
             Id = commentReact.Id,
             CommentId = commentReact.CommentId,
-            ReactedBy = new UserDto
+            ReactedBy = new UserResponse
             {
                 Id = user.Id,
                 Name = user.Name,
                 Email = user.Email,
                 AvatarUrl = user.AvatarUrl
             },
-            ReactType = commentReact.ReactType,
-            Name = commentReact.ReactType.ToString(),
+            TypeNo = commentReact.ReactType,
+            TypeName = commentReact.ReactType.ToString(),
             CreatedAt = commentReact.CreatedAt
         });
     }

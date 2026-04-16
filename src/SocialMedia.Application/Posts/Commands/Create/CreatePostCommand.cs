@@ -2,13 +2,13 @@
 using Microsoft.AspNetCore.Http;
 
 using SocialMedia.Application.Abstractions.Messaging;
-using SocialMedia.Application.Dtos;
+using SocialMedia.Application.Posts.Responses;
 
 namespace SocialMedia.Application.Posts.Commands;
 
 public record CreatePostCommand(
     string Content,
-    List<IFormFile> Attachments) : ICommand<PostDto>
+    List<IFormFile> Attachments) : ICommand<PostResponse>
 {
 
 }

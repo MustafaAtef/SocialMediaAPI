@@ -4,8 +4,8 @@ using SocialMedia.Application.Abstractions.Data;
 using SocialMedia.Application.Abstractions.Messaging;
 using SocialMedia.Application.Dtos;
 using SocialMedia.Application.Reacts.Queries.Common.Projections;
-using SocialMedia.Application.Reacts.Queries.Common.Responses;
-using SocialMedia.Application.Users.Common.Responses;
+using SocialMedia.Application.Reacts.Responses;
+using SocialMedia.Application.Users.Responses;
 using SocialMedia.Core.Abstractions;
 using SocialMedia.Core.Errors;
 

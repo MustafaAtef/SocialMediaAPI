@@ -1,5 +1,5 @@
 using SocialMedia.Application.Abstractions.Messaging;
-using SocialMedia.Application.Posts.Queries.Common.Responses;
+using SocialMedia.Application.Posts.Responses;
 
 namespace SocialMedia.Application.Posts.Queries.GetPost;
 

@@ -1,6 +1,6 @@
-using SocialMedia.Application.Users.Common.Responses;
+using SocialMedia.Application.Users.Responses;
 
-namespace SocialMedia.Application.Posts.Queries.Common.Responses;
+namespace SocialMedia.Application.Posts.Responses;
 
 public class PostResponse
 {

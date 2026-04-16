@@ -3,18 +3,18 @@ using Dapper;
 using SocialMedia.Application.Abstractions.Data;
 using SocialMedia.Application.Abstractions.Messaging;
 using SocialMedia.Application.Comments.Queries.Common.Projections;
-using SocialMedia.Application.Comments.Queries.Common.Responses;
+using SocialMedia.Application.Comments.Responses;
 using SocialMedia.Application.Dtos;
-using SocialMedia.Application.Users.Common.Responses;
+using SocialMedia.Application.Users.Responses;
 using SocialMedia.Core.Abstractions;
 using SocialMedia.Core.Errors;
 
 namespace SocialMedia.Application.Comments.Queries.GetPagedReplies;
 
 public sealed class GetPagedRepliesQueryHandler(ISqlConnectionFactory sqlConnectionFactory)
-    : IQueryHandler<GetPagedRepliesQuery, PagedList<RepliesResponse>>
+    : IQueryHandler<GetPagedRepliesQuery, PagedList<CommentResponse>>
 {
-    public async Task<Result<PagedList<RepliesResponse>>> Handle(
+    public async Task<Result<PagedList<CommentResponse>>> Handle(
         GetPagedRepliesQuery request,
         CancellationToken cancellationToken)
     {
@@ -53,14 +53,14 @@ public sealed class GetPagedRepliesQueryHandler(ISqlConnectionFactory sqlConnect
 
         var totalReplies = await multi.ReadSingleOrDefaultAsync<int?>();
         if (totalReplies is null)
-            return Result.Failure<PagedList<RepliesResponse>>(CommentErrors.NotFound);
+            return Result.Failure<PagedList<CommentResponse>>(CommentErrors.NotFound);
 
         var replyRows = (await multi.ReadAsync<CommentProjectionRow>()).ToList();
 
-        var result = replyRows.Select(r => new RepliesResponse
+        var result = replyRows.Select(r => new CommentResponse
         {
             Id = r.Id,
-            ParentCommentId = request.ParentCommentId,
+            ParentCommentId = r.ParentCommentId,
             PostId = r.PostId,
             Content = r.Content,
             CreatedBy = new UserResponse { Id = r.UserId, Name = r.UserName, Email = r.UserEmail, AvatarUrl = r.UserAvatarUrl },
@@ -70,6 +70,6 @@ public sealed class GetPagedRepliesQueryHandler(ISqlConnectionFactory sqlConnect
             UpdatedAt = r.UpdatedAt
         }).ToList();
 
-        return new PagedList<RepliesResponse>(totalReplies.Value, request.PageSize, request.Page, result);
+        return new PagedList<CommentResponse>(totalReplies.Value, request.PageSize, request.Page, result);
     }
 }

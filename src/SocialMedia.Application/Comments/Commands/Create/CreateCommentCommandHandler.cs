@@ -1,7 +1,8 @@
 using SocialMedia.Core.RepositoryContracts;
 using SocialMedia.Application.Abstractions.Messaging;
-using SocialMedia.Application.Dtos;
+using SocialMedia.Application.Comments.Responses;
 using SocialMedia.Application.ServiceContracts;
+using SocialMedia.Application.Users.Responses;
 using SocialMedia.Core.Abstractions;
 using SocialMedia.Core.Entities;
 using SocialMedia.Core.Errors;
@@ -10,17 +11,17 @@ using SocialMedia.Core.Events.Comments;
 namespace SocialMedia.Application.Comments.Commands.Create;
 
 public class CreateCommentCommandHandler(IUserService userService, IUnitOfWork unitOfWork)
-    : ICommandHandler<CreateCommentCommand, CommentWithoutRepliesDto>
+    : ICommandHandler<CreateCommentCommand, CommentResponse>
 {
-    public async Task<Result<CommentWithoutRepliesDto>> Handle(CreateCommentCommand request, CancellationToken cancellationToken)
+    public async Task<Result<CommentResponse>> Handle(CreateCommentCommand request, CancellationToken cancellationToken)
     {
         var user = userService.GetAuthenticatedUser();
         if (user == null)
-            return Result.Failure<CommentWithoutRepliesDto>(UserErrors.Unauthenticated);
+            return Result.Failure<CommentResponse>(UserErrors.Unauthenticated);
 
         var post = await unitOfWork.Posts.GetAsync(p => p.Id == request.PostId);
         if (post == null)
-            return Result.Failure<CommentWithoutRepliesDto>(PostErrors.NotFound);
+            return Result.Failure<CommentResponse>(PostErrors.NotFound);
 
         var comment = new Comment
         {
@@ -39,11 +40,12 @@ public class CreateCommentCommandHandler(IUserService userService, IUnitOfWork u
             comment.Content, comment.CreatedAt));
         await unitOfWork.SaveChangesAsync();
 
-        return Result.Success(new CommentWithoutRepliesDto
+        return Result.Success(new CommentResponse
         {
             Id = comment.Id,
+            ParentCommentId = comment.ParentCommentId,
             PostId = comment.PostId,
-            CreatedBy = new UserDto
+            CreatedBy = new UserResponse
             {
                 Id = user.Id,
                 Name = user.Name,
@@ -52,6 +54,7 @@ public class CreateCommentCommandHandler(IUserService userService, IUnitOfWork u
             },
             Content = comment.Content,
             ReactsCount = 0,
+            RepliesCount = 0,
             CreatedAt = comment.CreatedAt,
             UpdatedAt = comment.UpdatedAt
         });
