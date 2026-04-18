@@ -28,7 +28,7 @@ public class ReplyCommentCommandHandler(IUserService userService, IUnitOfWork un
         if (parentComment == null)
             return Result.Failure<CommentResponse>(CommentErrors.ParentNotFound);
 
-        if (parentComment.ParentComment is not null)
+        if (parentComment.ParentCommentId is not null)
             return Result.Failure<CommentResponse>(CommentErrors.ReplyOnReplyNotAllowed);
 
         var reply = new Comment

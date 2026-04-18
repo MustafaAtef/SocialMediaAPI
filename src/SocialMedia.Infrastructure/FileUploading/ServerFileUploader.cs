@@ -22,6 +22,8 @@ public class ServerFileUploader : IFileUploader
             throw new BadRequestException("No file uploaded.");
         }
 
+        folderName = folderName?.Trim() ?? string.Empty;
+
         var acceptedImageExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
         var acceptedVideoExtensions = new[] { ".mp4", ".avi", ".mov", ".mkv" };
 
@@ -50,8 +52,10 @@ public class ServerFileUploader : IFileUploader
             throw new BadRequestException("Image size exceeds the limit of 10 MB.");
         }
 
-        var wwwrootPath = _webHostEnvironment.WebRootPath;
-        var basePath = folderName != "" ? Path.Combine(wwwrootPath, "uploads", folderName, "images") : Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "images");
+        var webRootPath = GetWebRootPath();
+        var basePath = folderName != string.Empty
+            ? Path.Combine(webRootPath, "uploads", folderName, "images")
+            : Path.Combine(webRootPath, "uploads", "images");
         if (!Directory.Exists(basePath))
         {
             Directory.CreateDirectory(basePath);
@@ -77,8 +81,10 @@ public class ServerFileUploader : IFileUploader
         {
             throw new BadRequestException("Video size exceeds the limit of 20 MB.");
         }
-        var wwwrootPath = _webHostEnvironment.WebRootPath;
-        var basePath = folderName != "" ? Path.Combine(wwwrootPath, "uploads", folderName, "videos") : Path.Combine(_webHostEnvironment.WebRootPath, "uploads", "videos");
+        var webRootPath = GetWebRootPath();
+        var basePath = folderName != string.Empty
+            ? Path.Combine(webRootPath, "uploads", folderName, "videos")
+            : Path.Combine(webRootPath, "uploads", "videos");
         if (!Directory.Exists(basePath))
         {
             Directory.CreateDirectory(basePath);
@@ -96,11 +102,33 @@ public class ServerFileUploader : IFileUploader
     }
     public Task DeleteAsync(string url)
     {
-        var filePath = Path.Combine(_webHostEnvironment.WebRootPath, url.TrimStart('/'));
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return Task.CompletedTask;
+        }
+
+        var filePath = Path.Combine(GetWebRootPath(), url.TrimStart('/'));
         if (File.Exists(filePath))
         {
             File.Delete(filePath);
         }
         return Task.CompletedTask;
+    }
+
+    private string GetWebRootPath()
+    {
+        var webRootPath = _webHostEnvironment.WebRootPath;
+
+        if (string.IsNullOrWhiteSpace(webRootPath))
+        {
+            webRootPath = Path.Combine(_webHostEnvironment.ContentRootPath, "wwwroot");
+        }
+
+        if (!Directory.Exists(webRootPath))
+        {
+            Directory.CreateDirectory(webRootPath);
+        }
+
+        return webRootPath;
     }
 }

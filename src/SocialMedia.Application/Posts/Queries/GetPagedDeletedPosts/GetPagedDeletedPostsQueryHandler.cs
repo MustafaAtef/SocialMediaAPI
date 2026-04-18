@@ -96,7 +96,6 @@ public sealed class GetPagedDeletedPostsQueryHandler(
                 {
                     Id = row.AttachmentId.Value,
                     Url = row.AttachmentUrl!,
-                    Type = row.AttachmentType!
                 });
             }
         }

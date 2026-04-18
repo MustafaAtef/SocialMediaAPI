@@ -2,6 +2,8 @@ using FluentValidation;
 
 using MediatR;
 
+using SocialMedia.Application.Abstractions.Messaging;
+
 using SocialMedia.Core.Abstractions;
 using SocialMedia.Core.Errors;
 
@@ -9,7 +11,7 @@ namespace SocialMedia.Application.Abstractions.Behaviors;
 
 public sealed class ValidationBehavior<TRequest, TResponse>(IEnumerable<IValidator<TRequest>> validators)
     : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : notnull
+    where TRequest : IBaseCommand
     where TResponse : IResult
 {
     public async Task<TResponse> Handle(

@@ -35,8 +35,7 @@ public sealed class GetPostQueryHandler(ISqlConnectionFactory sqlConnectionFacto
 
             SELECT 
             AttachmentId AS Id, 
-            Url, 
-            Type
+            Url
             FROM PostAttachmentProjections
             WHERE PostId = @PostId;
             """;

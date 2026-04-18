@@ -21,7 +21,7 @@ public sealed class GetPagedPostReactsQueryHandler(ISqlConnectionFactory sqlConn
         using var connection = sqlConnectionFactory.CreateConnection();
 
         const string sql = """
-            SELECT ReactionsCount FROM PostProjections WHERE PostId = @PostId AND IsDeleted = 0;
+            SELECT ReactsCount FROM PostProjections WHERE PostId = @PostId AND IsDeleted = 0;
 
             SELECT 
                 Id, 

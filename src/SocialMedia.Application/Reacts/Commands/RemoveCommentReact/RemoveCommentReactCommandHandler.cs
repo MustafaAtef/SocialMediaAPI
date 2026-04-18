@@ -27,7 +27,7 @@ public class RemoveCommentReactCommandHandler(IUserService userService, IUnitOfW
 
         unitOfWork.CommentReacts.Remove(commentReact);
         comment.ReactionsCount--;
-        commentReact.RaiseDomainEvent(() => new CommentReactRemovedDomainEvent(commentReact.Id, commentReact.CommentId));
+        comment.RaiseDomainEvent(() => new CommentReactRemovedDomainEvent(commentReact.Id, commentReact.CommentId));
         await unitOfWork.SaveChangesAsync();
 
         return Result.Success();

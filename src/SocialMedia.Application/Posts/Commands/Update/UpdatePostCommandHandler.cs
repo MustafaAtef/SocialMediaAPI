@@ -86,7 +86,6 @@ public class UpdatePostCommandHandler(IUserService userService, IFileUploader fi
             {
                 Id = a.Id,
                 Url = a.Url,
-                Type = a.AttachmentType.ToString()
             }).ToList() ?? new List<AttachmentResponse>(),
             Author = new UserResponse
             {

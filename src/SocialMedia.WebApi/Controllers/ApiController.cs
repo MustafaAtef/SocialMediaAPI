@@ -7,7 +7,8 @@ namespace SocialMedia.Api.Controllers;
 [ApiController]
 public abstract class ApiController : ControllerBase
 {
-    public ActionResult HandleFailure(Core.Abstractions.IResult result)
+    [NonAction]
+    protected ActionResult HandleFailure(Core.Abstractions.IResult result)
     {
         var firstError = result.Error;
 
@@ -52,7 +53,7 @@ public abstract class ApiController : ControllerBase
 
     private static int GetStatusCode(ErrorType type) => type switch
     {
-        ErrorType.NotFound => 400,
+        ErrorType.NotFound => 404,
         ErrorType.Validation => 400,
         ErrorType.Conflict => 409,
         ErrorType.Unauthorized => 401,

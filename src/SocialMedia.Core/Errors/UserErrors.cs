@@ -7,7 +7,7 @@ public static class UserErrors
 
     public static readonly Error AlreadyExists = new(ErrorType.Conflict, "User.AlreadyExists", "A user with the same email already exists.");
 
-    public static readonly Error InvalidCredentials = new(ErrorType.Validation, "User.InvalidCredentials", "The provided credentials are invalid.");
+    public static readonly Error InvalidCredentials = new(ErrorType.NotFound, "User.InvalidCredentials", "The provided credentials are invalid.");
 
     public static readonly Error Unauthenticated = new(ErrorType.Unauthorized, "User.Unauthenticated", "The user is not authenticated.");
     public static readonly Error SelfFollow = new(ErrorType.Validation, "User.SelfFollow", "You cannot follow or unfollow yourself.");

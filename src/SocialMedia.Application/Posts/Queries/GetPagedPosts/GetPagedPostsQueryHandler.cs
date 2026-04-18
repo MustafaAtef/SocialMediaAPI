@@ -87,7 +87,6 @@ public sealed class GetPagedPostsQueryHandler(ISqlConnectionFactory sqlConnectio
                 {
                     Id = row.AttachmentId.Value,
                     Url = row.AttachmentUrl!,
-                    Type = row.AttachmentType!
                 });
             }
         }

@@ -21,13 +21,13 @@ public class PostRepository : Repository<Post>, IPostRepository
     }
     public async Task<Post?> GetDeletedPostAsync(int postId)
     {
-        return await _appDbContext.Set<Post>().IgnoreQueryFilters().Where(p => p.Id == postId && p.IsDeleted).Include(p => p.Attachments).FirstAsync();
+        return await _appDbContext.Set<Post>().IgnoreQueryFilters().Where(p => p.Id == postId && p.IsDeleted).Include(p => p.Attachments).FirstOrDefaultAsync();
 
     }
 
     public async Task<Post?> GetAsync(int postId)
     {
-        return await _appDbContext.Set<Post>().IgnoreQueryFilters().Where(p => p.Id == postId).FirstAsync();
+        return await _appDbContext.Set<Post>().IgnoreQueryFilters().Where(p => p.Id == postId).FirstOrDefaultAsync();
     }
 
     public async Task<bool> PermanentDeleteAsync(int postId)

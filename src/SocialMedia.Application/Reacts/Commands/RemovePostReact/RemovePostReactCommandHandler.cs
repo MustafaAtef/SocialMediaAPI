@@ -29,7 +29,7 @@ public class RemovePostReactCommandHandler(IUserService userService, IUnitOfWork
 
         unitOfWork.PostReacts.Remove(postReact);
         post.ReactionsCount--;
-        postReact.RaiseDomainEvent(() => new PostReactRemovedDomainEvent(postReact.Id, postReact.PostId));
+        post.RaiseDomainEvent(() => new PostReactRemovedDomainEvent(postReact.Id, postReact.PostId));
         await unitOfWork.SaveChangesAsync();
 
         return Result.Success();

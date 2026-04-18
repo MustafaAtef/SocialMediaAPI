@@ -14,6 +14,8 @@ public class PermanentDeletePostCommandHandler(IUserService userService, IUnitOf
     {
         var userToken = userService.GetAuthenticatedUser();
         if (userToken is null) return Result.Failure(UserErrors.Unauthenticated);
+        var user = await unitOfWork.Users.GetByIdAsync(userToken.Id);
+        if (user is null) return Result.Failure(UserErrors.NotFound);
 
         var post = await unitOfWork.Posts.GetAsync(request.PostId);
         if (post is null) return Result.Failure(PostErrors.NotFound);
@@ -21,7 +23,7 @@ public class PermanentDeletePostCommandHandler(IUserService userService, IUnitOf
         // REFACTOR
         if (post.UserId != userToken.Id) throw new UnAuthorizedException("User not authorized to permanently delete this post.");
 
-        post.RaiseDomainEvent(() => new PostPermanentDeletedDomainEvent(post.Id));
+        user.RaiseDomainEvent(() => new PostPermanentDeletedDomainEvent(post.Id));
         var success = await unitOfWork.Posts.PermanentDeleteAsync(request.PostId);
         if (!success) throw new BadRequestException("Error happened while deleting the post try again later.");
 

@@ -56,7 +56,6 @@ public class CreatePostCommandHandler(IUserService userService, IFileUploader fi
             {
                 Id = a.Id,
                 Url = a.Url,
-                Type = a.AttachmentType.ToString()
             }).ToList(),
             Author = new UserResponse
             {

@@ -32,7 +32,7 @@ public class UnFollowUserCommandHandler(IUserService userService, IUnitOfWork un
         unitOfWork.FollowersFollowings.Remove(existingFollow);
         followerUser.FollowingCount--;
         followingUser.FollowersCount--;
-        existingFollow.RaiseDomainEvent(() => new UserUnfollowedDomainEvent(existingFollow.FollowerId, existingFollow.FollowingId));
+        followerUser.RaiseDomainEvent(() => new UserUnfollowedDomainEvent(existingFollow.FollowerId, existingFollow.FollowingId));
         await unitOfWork.SaveChangesAsync();
 
         return Result.Success();

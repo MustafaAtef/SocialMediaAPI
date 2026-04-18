@@ -21,7 +21,7 @@ public sealed class GetPagedCommentReactsQueryHandler(ISqlConnectionFactory sqlC
         using var connection = sqlConnectionFactory.CreateConnection();
 
         const string sql = """
-            SELECT ReactionsCount FROM CommentProjections WHERE CommentId = @CommentId;
+            SELECT ReactsCount FROM CommentProjections WHERE CommentId = @CommentId;
 
             SELECT 
                 Id, 

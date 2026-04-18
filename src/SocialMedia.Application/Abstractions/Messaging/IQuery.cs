@@ -9,7 +9,11 @@ public interface IQuery<TResponse> : IRequest<Result<TResponse>>
 
 }
 
-public interface ICurrentUserQuery<TResponse> : IQuery<TResponse>
+public interface ICurrentUserQuery
 {
     public int UserId { get; set; }
+}
+
+public interface ICurrentUserQuery<TResponse> : IQuery<TResponse>, ICurrentUserQuery
+{
 }
