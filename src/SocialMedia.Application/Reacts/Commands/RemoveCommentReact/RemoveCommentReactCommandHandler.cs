@@ -16,7 +16,7 @@ public class RemoveCommentReactCommandHandler(IUserService userService, IUnitOfW
         if (user is null)
             return Result.Failure(UserErrors.Unauthenticated);
 
-        var comment = await unitOfWork.Comments.GetByIdAsync(request.CommentId);
+        var comment = await unitOfWork.Comments.GetAsync(c => c.Id == request.CommentId && c.PostId == request.PostId);
         if (comment is null)
             return Result.Failure(CommentErrors.NotFound);
 

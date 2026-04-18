@@ -37,7 +37,7 @@ public sealed class GetPagedRepliesQueryHandler(ISqlConnectionFactory sqlConnect
                 CreatedAt,
                 UpdatedAt
             FROM CommentProjections
-            WHERE ParentCommentId = @ParentCommentId
+            WHERE PostId = @PostId AND ParentCommentId = @ParentCommentId
             ORDER BY CreatedAt ASC
             OFFSET @Offset ROWS FETCH NEXT @PageSize ROWS ONLY;
             """;
@@ -46,6 +46,7 @@ public sealed class GetPagedRepliesQueryHandler(ISqlConnectionFactory sqlConnect
             sql,
             new
             {
+                request.PostId,
                 request.ParentCommentId,
                 Offset = (request.Page - 1) * request.PageSize,
                 request.PageSize
