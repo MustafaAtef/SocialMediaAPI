@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 
 using SocialMedia.Application.Abstractions.Data;
-using SocialMedia.Application.Service;
 using SocialMedia.Application.ServiceContracts;
 using SocialMedia.Application.Services;
 using SocialMedia.Core.RepositoryContracts;
@@ -51,10 +50,6 @@ public static class DependencyInjection
 
     private static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
-        services.AddScoped<IAuthService, AuthService>();
-        services.AddScoped<IPostService, PostService>();
-        services.AddScoped<ICommentService, CommentService>();
-        services.AddScoped<IReactService, ReactService>();
         services.AddScoped<IUserService, UserService>();
 
         return services;
