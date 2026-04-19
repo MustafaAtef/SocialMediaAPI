@@ -27,12 +27,12 @@ public class CreatePostCommandHandler(IUserService userService, IFileUploader fi
         };
         foreach (var attachment in request.Attachments)
         {
-            (StorageProvider storageType, AttachmentType attachmentType, string url) = await fileUploader.UploadAsync(attachment, "posts-attachments");
+            var uploadedAttachment = await fileUploader.UploadAsync(attachment, "posts-attachments");
             post.Attachments.Add(new PostAttachment
             {
-                AttachmentType = attachmentType,
-                Url = url,
-                StorageProvider = storageType
+                AttachmentType = uploadedAttachment.Type,
+                StorageProvider = uploadedAttachment.StorageProvider,
+                Url = uploadedAttachment.Url
             });
         }
         unitOfWork.Posts.Add(post);

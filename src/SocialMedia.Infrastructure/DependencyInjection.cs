@@ -35,7 +35,7 @@ public static class DependencyInjection
             .AddDataAccess()
             .AddAuthServices(configuration)
             .AddEmailServices()
-            .AddFileUploadServices()
+            .AddFileUploadServices(configuration)
             .AddBackgroundServices();
 
         return services;
@@ -118,10 +118,12 @@ public static class DependencyInjection
         return services;
     }
 
-    private static IServiceCollection AddFileUploadServices(this IServiceCollection services)
+    private static IServiceCollection AddFileUploadServices(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddScoped<IFileUploader, ServerFileUploader>();
-        services.AddScoped<ServerFileUploader>();
+        services.AddKeyedScoped<IFileUploader, ServerFileUploader>("Server");
+        services.AddKeyedScoped<IFileUploader, SupabaseFileUploader>("Supabase");
+        var activeProvider = configuration["FileUpload:Provider"] ?? "Server";
+        services.AddScoped(sp => sp.GetRequiredKeyedService<IFileUploader>(activeProvider));
 
         return services;
     }

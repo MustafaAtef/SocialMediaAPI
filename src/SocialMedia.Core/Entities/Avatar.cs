@@ -1,4 +1,3 @@
-
 using SocialMedia.Core.Enumerations;
 
 namespace SocialMedia.Core.Entities;

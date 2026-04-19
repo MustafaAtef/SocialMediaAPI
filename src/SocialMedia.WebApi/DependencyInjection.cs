@@ -3,13 +3,14 @@ using Microsoft.OpenApi;
 
 using SocialMedia.WebApi.Filters;
 using SocialMedia.WebApi.Middlewares;
+using SocialMedia.WebApi.options;
 
 namespace SocialMedia.WebApi;
 
 public static class DependencyInjection
 {
 
-    public static IServiceCollection AddWebApi(this IServiceCollection services)
+    public static IServiceCollection AddWebApi(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>
@@ -47,6 +48,15 @@ public static class DependencyInjection
     c.OperationFilter<AuthorizeCheckOperationFilter>();
     c.AddSignalRSwaggerGen();
 });
+        var supabaseSettings = configuration.GetSection("Supabase").Get<SupabaseOptions>();
+        if (supabaseSettings != null)
+        {
+            services.AddSingleton(provider => new Supabase.Client(supabaseSettings.Url, supabaseSettings.Key, new Supabase.SupabaseOptions
+            {
+                AutoRefreshToken = true,
+                AutoConnectRealtime = true,
+            }));
+        }
 
         return services;
     }

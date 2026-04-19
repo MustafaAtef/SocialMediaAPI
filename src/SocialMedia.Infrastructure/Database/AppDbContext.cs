@@ -64,6 +64,17 @@ public class AppDbContext : DbContext
             entity.Property(p => p.UpdatedAt).HasDefaultValueSql("GETDATE()");
             entity.HasQueryFilter(p => !p.IsDeleted);
         });
+
+        modelBuilder.Entity<Avatar>(entity =>
+        {
+            entity.Property(a => a.StorageProvider).HasConversion<string>();
+        });
+
+        modelBuilder.Entity<PostAttachment>(entity =>
+        {
+            entity.Property(pa => pa.StorageProvider).HasConversion<string>();
+        });
+
         modelBuilder.Entity<Comment>(entity =>
         {
             entity.HasOne(c => c.ParentComment)

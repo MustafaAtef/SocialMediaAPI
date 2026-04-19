@@ -1,97 +1,70 @@
-using System;
-using SocialMedia.Application.ServiceContracts;
 using Microsoft.AspNetCore.Http;
+
 using SocialMedia.Core.Enumerations;
 using SocialMedia.Core.Exceptions;
+using SocialMedia.Application.Dtos;
 
 namespace SocialMedia.Infrastructure.FileUploading;
 
-public class SupabaseFileUploader : IFileUploader
+public class SupabaseFileUploader(Supabase.Client supabaseClient) : FileUploaderBase
 {
-    private readonly Supabase.Client _supabaseClient;
-    public SupabaseFileUploader(Supabase.Client supabaseClient)
+    protected override async Task<UploadedFileDto> UploadImageAsync(IFormFile file, string bucketName)
     {
-        _supabaseClient = supabaseClient;
-    }
-
-
-
-    public async Task<(StorageProvider StorageProvider, AttachmentType attachmentType, string Url)> UploadAsync(IFormFile file, string bucketName = "default")
-    {
-        if (file == null || file.Length == 0)
+        if (file.Length > MaxImageBytes)
         {
-            throw new BadRequestException("No file uploaded.");
-        }
-
-        var acceptedImageExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-        var acceptedVideoExtensions = new[] { ".mp4", ".avi", ".mov", ".mkv" };
-
-        if (acceptedImageExtensions.Contains(Path.GetExtension(file.FileName).ToLower()))
-        {
-            return await _uploadImageAsync(file, bucketName);
-        }
-        else if (acceptedVideoExtensions.Contains(Path.GetExtension(file.FileName).ToLower()))
-        {
-            return await _uploadVideoAsync(file, bucketName);
-        }
-        else
-        {
-            throw new BadRequestException("Invalid file format");
-        }
-    }
-
-
-    private async Task<(StorageProvider StorageProvider, AttachmentType, string Url)> _uploadImageAsync(IFormFile file, string bucketName)
-    {
-        if (file is null || file.Length == 0)
-        {
-            throw new BadRequestException("No image uploaded.");
-        }
-        if (file.Length > 5 * 1024 * 1024)
-        {
-            throw new BadRequestException("Image size exceeds the limit of 5 MB.");
+            throw new BadRequestException($"Image size exceeds the limit of {MaxImageBytes / (1024 * 1024)} MB.");
         }
         var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
         using var ms = new MemoryStream();
         await file.CopyToAsync(ms);
         var fileContent = ms.ToArray();
-        var response = await _supabaseClient.Storage.From(bucketName).Upload(fileContent, fileName);
-        var url = _supabaseClient.Storage.From(bucketName).GetPublicUrl(fileName);
+        var existingBucket = await supabaseClient.Storage.GetBucket(bucketName);
+        if (existingBucket is null)
+        {
+            await supabaseClient.Storage.CreateBucket(bucketName, new() { Public = true });
+        }
+        var response = await supabaseClient.Storage.From(bucketName).Upload(fileContent, fileName);
+        var url = supabaseClient.Storage.From(bucketName).GetPublicUrl(fileName);
         if (url is null)
         {
             throw new BadRequestException("Failed to upload image to Supabase.");
         }
-        return (StorageProvider.Supabase, AttachmentType.Image, url);
+        return new UploadedFileDto { Type = AttachmentType.Image, StorageProvider = StorageProvider.Supabase, Url = url };
     }
 
-    private async Task<(StorageProvider, AttachmentType, string)> _uploadVideoAsync(IFormFile file, string bucketName)
+    protected override async Task<UploadedFileDto> UploadVideoAsync(IFormFile file, string bucketName)
     {
         if (file is null || file.Length == 0)
         {
             throw new BadRequestException("No video uploaded.");
         }
-        if (file.Length > 20 * 1024 * 1024)
+        if (file.Length > MaxVideoBytes)
         {
-            throw new BadRequestException("Video size exceeds the limit of 20 MB.");
+            throw new BadRequestException($"Video size exceeds the limit of {MaxVideoBytes / (1024 * 1024)} MB.");
         }
         var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
         using var ms = new MemoryStream();
         await file.CopyToAsync(ms);
         var fileContent = ms.ToArray();
-        var response = await _supabaseClient.Storage.From(bucketName).Upload(fileContent, fileName);
-        var url = _supabaseClient.Storage.From(bucketName).GetPublicUrl(fileName);
+        var existingBucket = await supabaseClient.Storage.GetBucket(bucketName);
+        if (existingBucket is null)
+        {
+            await supabaseClient.Storage.CreateBucket(bucketName, new() { Public = true });
+        }
+        var response = await supabaseClient.Storage.From(bucketName).Upload(fileContent, fileName);
+        var url = supabaseClient.Storage.From(bucketName).GetPublicUrl(fileName);
         if (url is null)
         {
             throw new BadRequestException("Failed to upload video to Supabase.");
         }
-        return (StorageProvider.Supabase, AttachmentType.Video, url);
+        return new UploadedFileDto { Type = AttachmentType.Video, StorageProvider = StorageProvider.Supabase, Url = url };
     }
 
-    public Task DeleteAsync(string url)
+    public override Task DeleteAsync(string url)
     {
         var splitedUrl = url.Split('/');
         var filename = splitedUrl[^1];
         var bucketName = splitedUrl[^2];
-        return _supabaseClient.Storage.From(bucketName).Remove(filename);
+        return supabaseClient.Storage.From(bucketName).Remove(filename);
     }
 }

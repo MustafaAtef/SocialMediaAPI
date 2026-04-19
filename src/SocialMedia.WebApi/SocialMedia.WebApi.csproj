@@ -21,6 +21,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="options/" />
     <Folder Include="wwwroot/uploads/posts-attachments/" />
     <Folder Include="wwwroot/uploads/users-avatars/" />
   </ItemGroup>

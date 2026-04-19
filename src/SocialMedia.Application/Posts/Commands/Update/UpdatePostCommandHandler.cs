@@ -3,6 +3,7 @@ using SocialMedia.Application.Abstractions.Messaging;
 using SocialMedia.Application.Posts.Responses;
 using SocialMedia.Application.ServiceContracts;
 using SocialMedia.Application.Users.Responses;
+using Microsoft.Extensions.DependencyInjection;
 using SocialMedia.Core.Abstractions;
 using SocialMedia.Core.Entities;
 using SocialMedia.Core.Enumerations;
@@ -12,7 +13,7 @@ using SocialMedia.Core.Events.Posts;
 
 namespace SocialMedia.Application.Posts.Commands.Update;
 
-public class UpdatePostCommandHandler(IUserService userService, IFileUploader fileUploader, IUnitOfWork unitOfWork) : ICommandHandler<UpdatePostCommand, PostResponse>
+public class UpdatePostCommandHandler(IUserService userService, IFileUploader fileUploader, IUnitOfWork unitOfWork, IServiceScopeFactory serviceScopeFactory) : ICommandHandler<UpdatePostCommand, PostResponse>
 {
     public async Task<Result<PostResponse>> Handle(UpdatePostCommand request, CancellationToken cancellationToken)
     {
@@ -42,12 +43,12 @@ public class UpdatePostCommandHandler(IUserService userService, IFileUploader fi
         {
             foreach (var attachment in request.AddedAttachments)
             {
-                (StorageProvider storageType, AttachmentType attachmentType, string url) = await fileUploader.UploadAsync(attachment, "posts-attachments");
+                var uploadedAttachment = await fileUploader.UploadAsync(attachment, "posts-attachments");
                 var newAttachment = new PostAttachment
                 {
-                    AttachmentType = attachmentType,
-                    Url = url,
-                    StorageProvider = storageType
+                    AttachmentType = uploadedAttachment.Type,
+                    StorageProvider = uploadedAttachment.StorageProvider,
+                    Url = uploadedAttachment.Url
                 };
                 post.Attachments?.Add(newAttachment);
                 addedAttachments.Add(newAttachment);
@@ -64,7 +65,11 @@ public class UpdatePostCommandHandler(IUserService userService, IFileUploader fi
                 {
                     post.Attachments?.Remove(attachment);
                     removedAttachmentIds.Add(attachmentId);
-                    await fileUploader.DeleteAsync(attachment.Url);
+
+                    using var scope = serviceScopeFactory.CreateScope();
+                    var uploader = scope.ServiceProvider.GetRequiredKeyedService<IFileUploader>(
+                        attachment.StorageProvider.ToString());
+                    await uploader.DeleteAsync(attachment.Url);
                 }
             }
         }

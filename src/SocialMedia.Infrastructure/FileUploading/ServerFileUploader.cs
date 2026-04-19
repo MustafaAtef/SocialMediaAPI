@@ -4,52 +4,16 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Hosting;
 using SocialMedia.Core.Enumerations;
 using SocialMedia.Core.Exceptions;
+using SocialMedia.Application.Dtos;
 namespace SocialMedia.Infrastructure.FileUploading;
 
-public class ServerFileUploader : IFileUploader
+public class ServerFileUploader(IWebHostEnvironment webHostEnvironment) : FileUploaderBase
 {
-
-    private readonly IWebHostEnvironment _webHostEnvironment;
-    public ServerFileUploader(IWebHostEnvironment webHostEnvironment)
+    protected override async Task<UploadedFileDto> UploadImageAsync(IFormFile file, string folderName)
     {
-        _webHostEnvironment = webHostEnvironment;
-    }
-
-    public async Task<(StorageProvider, AttachmentType, string)> UploadAsync(IFormFile file, string folderName = "")
-    {
-        if (file == null || file.Length == 0)
+        if (file.Length > MaxImageBytes)
         {
-            throw new BadRequestException("No file uploaded.");
-        }
-
-        folderName = folderName?.Trim() ?? string.Empty;
-
-        var acceptedImageExtensions = new[] { ".jpg", ".jpeg", ".png", ".gif" };
-        var acceptedVideoExtensions = new[] { ".mp4", ".avi", ".mov", ".mkv" };
-
-        if (acceptedImageExtensions.Contains(Path.GetExtension(file.FileName).ToLower()))
-        {
-            return await _uploadImageAsync(file, folderName);
-        }
-        else if (acceptedVideoExtensions.Contains(Path.GetExtension(file.FileName).ToLower()))
-        {
-            return await _uploadVideoAsync(file, folderName);
-        }
-        else
-        {
-            throw new BadRequestException("Invalid file format. Only images and videos are allowed.");
-        }
-    }
-    private async Task<(StorageProvider, AttachmentType, string)> _uploadImageAsync(IFormFile file, string folderName)
-    {
-
-        if (file is null || file.Length == 0)
-        {
-            throw new BadRequestException("No image uploaded.");
-        }
-        if (file.Length > 10 * 1024 * 1024)
-        {
-            throw new BadRequestException("Image size exceeds the limit of 10 MB.");
+            throw new BadRequestException($"Image size exceeds the limit of {MaxImageBytes / (1024 * 1024)} MB.");
         }
 
         var webRootPath = GetWebRootPath();
@@ -67,20 +31,23 @@ public class ServerFileUploader : IFileUploader
             await file.CopyToAsync(stream);
         }
 
-        return (StorageProvider.Disk, AttachmentType.Image, folderName == ""
+        return new UploadedFileDto
+        {
+            Type = AttachmentType.Image,
+            StorageProvider = StorageProvider.Server,
+            Url = folderName == ""
             ? $"/uploads/images/{fileName}"
-            : $"/uploads/{folderName}/images/{fileName}");
+            : $"/uploads/{folderName}/images/{fileName}"
+        };
     }
-    private async Task<(StorageProvider StorageProvider, AttachmentType attachmentType, string Url)> _uploadVideoAsync(IFormFile file, string folderName)
+
+    protected override async Task<UploadedFileDto> UploadVideoAsync(IFormFile file, string folderName)
     {
-        if (file is null || file.Length == 0)
+        if (file.Length > MaxVideoBytes)
         {
-            throw new BadRequestException("No video uploaded.");
+            throw new BadRequestException($"Video size exceeds the limit of {MaxVideoBytes / (1024 * 1024)} MB.");
         }
-        if (file.Length > 20 * 1024 * 1024)
-        {
-            throw new BadRequestException("Video size exceeds the limit of 20 MB.");
-        }
+
         var webRootPath = GetWebRootPath();
         var basePath = folderName != string.Empty
             ? Path.Combine(webRootPath, "uploads", folderName, "videos")
@@ -96,11 +63,17 @@ public class ServerFileUploader : IFileUploader
             await file.CopyToAsync(stream);
         }
 
-        return (StorageProvider.Disk, AttachmentType.Video, folderName == ""
+        return new UploadedFileDto
+        {
+            Type = AttachmentType.Video,
+            StorageProvider = StorageProvider.Server,
+            Url = folderName == ""
             ? $"/uploads/videos/{fileName}"
-            : $"/uploads/{folderName}/videos/{fileName}");
+            : $"/uploads/{folderName}/videos/{fileName}"
+        };
     }
-    public Task DeleteAsync(string url)
+
+    public override Task DeleteAsync(string url)
     {
         if (string.IsNullOrWhiteSpace(url))
         {
@@ -117,11 +90,11 @@ public class ServerFileUploader : IFileUploader
 
     private string GetWebRootPath()
     {
-        var webRootPath = _webHostEnvironment.WebRootPath;
+        var webRootPath = webHostEnvironment.WebRootPath;
 
         if (string.IsNullOrWhiteSpace(webRootPath))
         {
-            webRootPath = Path.Combine(_webHostEnvironment.ContentRootPath, "wwwroot");
+            webRootPath = Path.Combine(webHostEnvironment.ContentRootPath, "wwwroot");
         }
 
         if (!Directory.Exists(webRootPath))
