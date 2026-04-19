@@ -9,6 +9,8 @@ using SocialMedia.Core.Abstractions;
 using SocialMedia.Core.Entities;
 using SocialMedia.Core.Errors;
 using SocialMedia.Core.Events.Users;
+using Microsoft.Extensions.Options;
+using SocialMedia.Application.Options;
 
 namespace SocialMedia.Application.Auth.Commands.Register;
 
@@ -18,8 +20,10 @@ public class RegisterCommandHandler(
     IJwtService jwtService,
     IFileUploader fileUploader,
     IEmailOutboxWriter emailOutboxWriter,
-    IConfiguration configuration) : ICommandHandler<RegisterCommand, AuthenticatedUserResponse>
+    IOptions<ExpireDurationsOptions> expireDurationsOptions) : ICommandHandler<RegisterCommand, AuthenticatedUserResponse>
 {
+    private readonly ExpireDurationsOptions expireDurations = expireDurationsOptions.Value;
+
     public async Task<Result<AuthenticatedUserResponse>> Handle(RegisterCommand request, CancellationToken cancellationToken)
     {
         var existing = await unitOfWork.Users.GetAsync(u => u.Email == request.Email);
@@ -40,9 +44,7 @@ public class RegisterCommandHandler(
         newUser.RefreshTokenExpiryTime = jwtData.RefreshTokenExpirationDate;
         newUser.EmailVerificationToken = CryptoHelper.GenerateRandomToken();
         newUser.EmailVerificationTokenExpiryTime = DateTime.Now.AddMinutes(
-            configuration["EmailVerificationTokenExpiryMinutes"] != null
-                ? int.Parse(configuration["EmailVerificationTokenExpiryMinutes"] ?? "")
-                : 15);
+            expireDurations.EmailVerificationTokenExpiryMinutes);
 
         // REFACTOR
         if (request.Avatar != null)

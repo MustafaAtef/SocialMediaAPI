@@ -10,11 +10,13 @@
       <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" />
 
     <PackageReference Include="Microsoft.Extensions.Configuration" />
+      <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
   </ItemGroup>
 
   <ItemGroup>
     <Folder Include="Auth/Responses/" />
     <Folder Include="Comments/Queries/Responses/" />
+    <Folder Include="Options/" />
     <Folder Include="Posts/Commands/Restore/" />
     <Folder Include="Posts/Commands/SoftDelete/" />
     <Folder Include="Posts/Commands/Update/" />
