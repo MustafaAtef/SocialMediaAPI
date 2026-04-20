@@ -4,10 +4,11 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace SocialMedia.WebApi.Middlewares;
 
-public sealed class GlobalExceptionHandler : IExceptionHandler
+public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logger) : IExceptionHandler
 {
     public async ValueTask<bool> TryHandleAsync(HttpContext context, Exception exception, CancellationToken cancellationToken)
     {
+        logger.LogError(exception, "Exception occurred: {Message}", exception.Message);
         var problemDetails = new ProblemDetails
         {
             Status = StatusCodes.Status500InternalServerError,

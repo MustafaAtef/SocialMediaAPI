@@ -16,6 +16,8 @@
     <PackageReference Include="Microsoft.IdentityModel.Protocols" />
     <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" />
     <PackageReference Include="Microsoft.IdentityModel.Tokens" />
+    <PackageReference Include="Serilog.AspNetCore" />
+    <PackageReference Include="Serilog.Sinks.Seq" />
     <PackageReference Include="SignalRSwaggerGen" />
     <PackageReference Include="Swashbuckle.AspNetCore" />
   </ItemGroup>

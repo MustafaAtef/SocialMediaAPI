@@ -1,14 +1,16 @@
 services:
-  api:
+  social-api:
     build: .
+    container_name: SocialMedia.API
     ports:
-      - 5000:5000
+      - 5039:5000
     depends_on:
-      - sqlserver-db
+      - social-db
     volumes:
       - api_wwwroot:/app/wwwroot
-  sqlserver-db:
+  social-db:
     image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: SocialMedia.DB
     environment:
       - ACCEPT_EULA=Y
       - SA_PASSWORD=YourStrong@Passw0rd
@@ -16,7 +18,19 @@ services:
       - 1234:1433
     volumes:
       - db_data:/var/opt/mssql
+  social-seq:
+    image: datalust/seq:latest
+    container_name: SocialMedia.Seq
+    environment:
+      - ACCEPT_EULA=Y
+      - SEQ_FIRSTRUN_ADMINPASSWORD=YourStrongSeq@Passw0rd
+    ports:
+      - 5341:5341
+      - 8081:80
+    volumes:
+      - seq_data:/data
 
 volumes:
   db_data:
   api_wwwroot:
+  seq_data:

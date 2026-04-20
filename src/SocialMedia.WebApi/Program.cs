@@ -1,13 +1,20 @@
 using Microsoft.EntityFrameworkCore;
 
+using Serilog;
+
 using SocialMedia.Application;
 using SocialMedia.Infrastructure;
 using SocialMedia.Infrastructure.Database;
 using SocialMedia.WebApi;
 using SocialMedia.WebApi.Hubs;
+using SocialMedia.WebApi.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Host.UseSerilog((context, services, configuration) =>
+    configuration
+        .ReadFrom.Configuration(context.Configuration)
+);
 
 builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
@@ -28,6 +35,8 @@ using (var scope = app.Services.CreateScope())
     catch (Exception) { }
 }
 
+app.UseRequestContextLogging();
+app.UseSerilogRequestLogging();
 app.UseExceptionHandler();
 app.UseStaticFiles();
 app.UseCors();
