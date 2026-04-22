@@ -1,4 +1,6 @@
 
+using System.Threading.RateLimiting;
+
 using Microsoft.OpenApi;
 
 using SocialMedia.WebApi.Filters;
@@ -9,7 +11,6 @@ namespace SocialMedia.WebApi;
 
 public static class DependencyInjection
 {
-
     public static IServiceCollection AddWebApi(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddControllers()
@@ -57,6 +58,24 @@ public static class DependencyInjection
                 AutoConnectRealtime = true,
             }));
         }
+
+        return services;
+    }
+
+    private static IServiceCollection AddRateLimiting(this IServiceCollection services)
+    {
+        // services.AddRateLimiter(options =>
+        // {
+        //     options.AddPolicy("SlidingWindowPolicy", context =>
+        //         RateLimitPartition.GetSlidingWindowLimiter(partitionKey: context.User., factory: partition => new SlidingWindowRateLimiterOptions
+        //         {
+        //             PermitLimit = 100,
+        //             Window = TimeSpan.FromMinutes(1),
+        //             SegmentsPerWindow = 6,
+        //             QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+        //             QueueLimit = 0
+        //         }));
+        // });
 
         return services;
     }

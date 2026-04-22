@@ -10,4 +10,7 @@
     <Project Path="src/SocialMedia.Infrastructure/SocialMedia.Infrastructure.csproj" />
     <Project Path="src/SocialMedia.WebApi/SocialMedia.WebApi.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/SocialMedia.Application.UnitTests/SocialMedia.Application.UnitTests.csproj" />
+  </Folder>
 </Solution>
