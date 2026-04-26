@@ -1,6 +1,7 @@
 using System.Text;
 
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
@@ -30,20 +31,11 @@ public static class DependencyInjection
 
         services
             .AddDatabase(configuration)
-            .AddRepositories()
             .AddApplicationServices()
-            .AddDataAccess()
             .AddAuthServices(configuration)
             .AddEmailServices()
             .AddFileUploadServices(configuration)
             .AddBackgroundServices();
-
-        return services;
-    }
-
-    private static IServiceCollection AddRepositories(this IServiceCollection services)
-    {
-        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         return services;
     }
@@ -55,10 +47,22 @@ public static class DependencyInjection
         return services;
     }
 
-    private static IServiceCollection AddDataAccess(this IServiceCollection services)
+    private static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddScoped<ISqlConnectionFactory, SqlConnectionFactory>();
+        var connectionString = configuration.GetConnectionString("sqlserverConnectionString");
+        if (string.IsNullOrEmpty(connectionString))
+        {
+            throw new InvalidOperationException("Connection string 'sqlserverConnectionString' is not configured.");
+        }
+
+        services.AddDbContext<AppDbContext>(builder =>
+       {
+           builder.UseSqlServer(connectionString);
+       });
+        services.AddSingleton<ISqlConnectionFactory>(_ => new SqlConnectionFactory(connectionString));
         services.AddScoped<ITransactionContext, TransactionContext>();
+
+        services.AddScoped<IUnitOfWork, UnitOfWork>();
 
         return services;
     }

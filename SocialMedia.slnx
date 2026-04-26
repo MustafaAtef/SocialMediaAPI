@@ -12,5 +12,6 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/SocialMedia.Application.UnitTests/SocialMedia.Application.UnitTests.csproj" />
+    <Project Path="tests/SocialMedia.IntegrationTests/SocialMedia.IntegrationTests.csproj" />
   </Folder>
 </Solution>

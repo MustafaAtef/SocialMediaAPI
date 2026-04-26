@@ -6,11 +6,11 @@ using Microsoft.Extensions.Configuration;
 using SocialMedia.Application.Abstractions.Data;
 namespace SocialMedia.Infrastructure.Data;
 
-public sealed class SqlConnectionFactory(IConfiguration configuration) : ISqlConnectionFactory
+public sealed class SqlConnectionFactory(string connectionString) : ISqlConnectionFactory
 {
     public IDbConnection CreateConnection()
     {
-        var connection = new SqlConnection(configuration.GetConnectionString("sqlserverConnectionString"));
+        var connection = new SqlConnection(connectionString);
         connection.Open();
         return connection;
     }

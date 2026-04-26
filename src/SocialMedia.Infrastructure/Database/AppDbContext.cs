@@ -193,15 +193,3 @@ public class AppDbContext : DbContext
         AddRange(outboxMessages);
     }
 }
-
-public static class AppDbContextExtensions
-{
-
-    public static IServiceCollection AddDatabase(this IServiceCollection services, IConfiguration configuration)
-    {
-        return services.AddDbContext<AppDbContext>(builder =>
-        {
-            builder.UseSqlServer(configuration.GetConnectionString("sqlserverConnectionString"));
-        });
-    }
-}
