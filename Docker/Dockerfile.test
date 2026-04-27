@@ -1,4 +1,5 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+
 WORKDIR /app
 
 ENV NUGET_PACKAGES=/root/.nuget/packages
@@ -13,14 +14,14 @@ COPY ./tests/SocialMedia.Application.UnitTests/*.csproj   ./tests/SocialMedia.Ap
 COPY ./tests/SocialMedia.IntegrationTests/*.csproj        ./tests/SocialMedia.IntegrationTests/
 COPY ./SocialMedia.slnx .
 
-RUN --mount=type=cache,id=nuget-http,target=/root/.local/share/NuGet/http-cache \
-    --mount=type=cache,id=nuget-global,target=$NUGET_PACKAGES \
+RUN --mount=type=cache,target=/root/.local/share/NuGet/http-cache \
+    --mount=type=cache,target=$NUGET_PACKAGES \
     dotnet restore ./SocialMedia.slnx
 
 COPY . .
 
-RUN --mount=type=cache,id=nuget-http,target=/root/.local/share/NuGet/http-cache \
-    --mount=type=cache,id=nuget-global,target=$NUGET_PACKAGES \
+RUN --mount=type=cache,target=/root/.local/share/NuGet/http-cache \
+    --mount=type=cache,target=$NUGET_PACKAGES \
     dotnet build ./SocialMedia.slnx \
     --no-restore \
     -c Debug
