@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -34,18 +35,28 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         base.ConfigureWebHost(builder);
+        var testConnectionString = _msSqlContainer.GetConnectionString();
+
+        builder.ConfigureAppConfiguration((_, configurationBuilder) =>
+        {
+            configurationBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["ConnectionStrings:sqlserverConnectionString"] = testConnectionString
+            });
+        });
+
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll(typeof(DbContextOptions<AppDbContext>));
             services.AddDbContext<AppDbContext>(options =>
             {
-                options.UseSqlServer(_msSqlContainer.GetConnectionString());
+                options.UseSqlServer(testConnectionString);
             });
 
             services.RemoveAll(typeof(IHostedService));
 
             services.RemoveAll(typeof(ISqlConnectionFactory));
-            services.AddSingleton<ISqlConnectionFactory>(new SqlConnectionFactory(_msSqlContainer.GetConnectionString()));
+            services.AddSingleton<ISqlConnectionFactory>(new SqlConnectionFactory(testConnectionString));
         });
     }
 
