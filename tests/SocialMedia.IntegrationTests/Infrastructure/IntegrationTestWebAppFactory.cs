@@ -40,10 +40,7 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
 
         builder.ConfigureAppConfiguration((_, configurationBuilder) =>
         {
-            configurationBuilder.AddInMemoryCollection(new Dictionary<string, string?>
-            {
-                ["ConnectionStrings:sqlserverConnectionString"] = testConnectionString
-            });
+            configurationBuilder.AddJsonFile("appsettings.Testing.json", optional: false);
         });
 
         builder.ConfigureTestServices(services =>
