@@ -25,7 +25,6 @@ COPY . .
 RUN --mount=type=cache,id=nuget-http,target=/root/.local/share/NuGet/http-cache \
     --mount=type=cache,id=nuget-global,target=$NUGET_PACKAGES \
     dotnet build ./SocialMedia.slnx \
-    --no-restore \
     -c Release
 
 

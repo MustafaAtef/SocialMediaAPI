@@ -20,29 +20,31 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Build test image
-        uses: docker/build-push-action@v7
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
         with:
-          context: .
-          file: Docker/Dockerfile.test
-          push: false
-          load: true
-          tags: socialmedia-test:${{ github.sha }}
-          cache-from: type=gha,scope=test-image
-          cache-to: type=gha,mode=max,scope=test-image
+          dotnet-version: 10.0.x
+
+      - name: Cache NuGet packages
+        uses: actions/cache@v5
+        with:
+          path: ~/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('**/*.csproj', '**/Directory.Packages.props') }}
+          restore-keys: |
+            ${{ runner.os }}-nuget-
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Release
+
       - name: Run unit tests
         run: |
-          mkdir -p ${{ github.workspace }}/test-results/unit
-          docker run --rm \
-            -v ${{ github.workspace }}/test-results/unit:/app/test-results \
-            socialmedia-test:${{ github.sha }} \
-            --no-build \
+          dotnet test --no-build --configuration Release \
             --filter "Category=Unit" \
-            --logger "trx;LogFileName=unit-results.trx" \
-            --results-directory /app/test-results
+            --logger "trx;LogFileName=test-results.trx" \
+            --results-directory test-results/unit
 
       - name: Publish unit test results
         uses: dorny/test-reporter@v3
@@ -72,34 +74,10 @@ jobs:
           push: false
           load: true
           tags: socialmedia-test:${{ github.sha }}
-          cache-from: type=gha,scope=test-image
-          cache-to: type=gha,mode=max,scope=test-image
-
-      - name: Cache Testcontainers Docker images
-        id: cache-docker
-        uses: actions/cache@v5
-        with:
-          path: /tmp/docker-images
-          key: docker-images-${{ runner.os }}-mssql-2022-ryuk-0.14.0
-
-      - name: Load cached images
-        if: steps.cache-docker.outputs.cache-hit == 'true'
-        run: |
-          docker load < /tmp/docker-images/mssql.tar
-          docker load < /tmp/docker-images/ryuk.tar
-
-      - name: Pull and save images
-        if: steps.cache-docker.outputs.cache-hit != 'true'
-        run: |
-          docker pull mcr.microsoft.com/mssql/server:2022-latest
-          docker pull testcontainersofficial/ryuk:0.14.0
-          mkdir -p /tmp/docker-images
-          docker save mcr.microsoft.com/mssql/server:2022-latest > /tmp/docker-images/mssql.tar
-          docker save testcontainersofficial/ryuk:0.14.0 > /tmp/docker-images/ryuk.tar
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Run integration tests
-        env:
-          TESTCONTAINERS_RYUK_DISABLED: "false"
         run: |
           mkdir -p ${{ github.workspace }}/test-results/integration
           docker run --rm \

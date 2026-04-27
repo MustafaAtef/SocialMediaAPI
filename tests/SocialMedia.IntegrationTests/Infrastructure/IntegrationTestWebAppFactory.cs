@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
@@ -29,31 +30,35 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
         .WithCleanUp(true)
         .Build();
     public HttpClient HttpClient { get; private set; } = null!;
-    private SqlConnection _dbConnection;
+    private SqlConnection _dbConnection = null!;
     private Respawner _respawner = null!;
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         base.ConfigureWebHost(builder);
+        var testConnectionString = _msSqlContainer.GetConnectionString();
+
         builder.ConfigureTestServices(services =>
         {
             services.RemoveAll(typeof(DbContextOptions<AppDbContext>));
             services.AddDbContext<AppDbContext>(options =>
             {
-                options.UseSqlServer(_msSqlContainer.GetConnectionString());
+                options.UseSqlServer(testConnectionString);
             });
 
             services.RemoveAll(typeof(IHostedService));
 
             services.RemoveAll(typeof(ISqlConnectionFactory));
-            services.AddSingleton<ISqlConnectionFactory>(new SqlConnectionFactory(_msSqlContainer.GetConnectionString()));
+            services.AddSingleton<ISqlConnectionFactory>(new SqlConnectionFactory(testConnectionString));
         });
     }
 
     public async ValueTask InitializeAsync()
     {
         await _msSqlContainer.StartAsync();
+        var testConnectionString = _msSqlContainer.GetConnectionString();
+
         HttpClient = CreateClient();
-        _dbConnection = new SqlConnection(_msSqlContainer.GetConnectionString());
+        _dbConnection = new SqlConnection(testConnectionString);
         await _dbConnection.OpenAsync();
         _respawner = await Respawner.CreateAsync(_dbConnection, new RespawnerOptions
         {
