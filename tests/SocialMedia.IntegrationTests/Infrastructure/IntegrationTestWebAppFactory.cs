@@ -26,7 +26,6 @@ namespace SocialMedia.IntegrationTests.Infrastructure;
 
 public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsyncLifetime
 {
-    private const string SqlConnectionStringEnvKey = "ConnectionStrings__sqlserverConnectionString";
     private readonly MsSqlContainer _msSqlContainer = new MsSqlBuilder("mcr.microsoft.com/mssql/server:2022-latest")
         .WithCleanUp(true)
         .Build();
@@ -37,11 +36,6 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
     {
         base.ConfigureWebHost(builder);
         var testConnectionString = _msSqlContainer.GetConnectionString();
-
-        builder.ConfigureAppConfiguration((_, configurationBuilder) =>
-        {
-            configurationBuilder.AddJsonFile("appsettings.Testing.json", optional: false);
-        });
 
         builder.ConfigureTestServices(services =>
         {
@@ -61,9 +55,10 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
     public async ValueTask InitializeAsync()
     {
         await _msSqlContainer.StartAsync();
-        Environment.SetEnvironmentVariable(SqlConnectionStringEnvKey, _msSqlContainer.GetConnectionString());
+        var testConnectionString = _msSqlContainer.GetConnectionString();
+
         HttpClient = CreateClient();
-        _dbConnection = new SqlConnection(_msSqlContainer.GetConnectionString());
+        _dbConnection = new SqlConnection(testConnectionString);
         await _dbConnection.OpenAsync();
         _respawner = await Respawner.CreateAsync(_dbConnection, new RespawnerOptions
         {
@@ -87,6 +82,5 @@ public class IntegrationTestWebAppFactory : WebApplicationFactory<Program>, IAsy
         await _dbConnection.DisposeAsync();
         await base.DisposeAsync();
         await _msSqlContainer.DisposeAsync();
-        Environment.SetEnvironmentVariable(SqlConnectionStringEnvKey, null);
     }
 }

@@ -26,10 +26,4 @@
     <ProjectReference Include="../../src/SocialMedia.WebApi/SocialMedia.WebApi.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Include="appsettings.Testing.json">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </Content>
-  </ItemGroup>
-
 </Project>
