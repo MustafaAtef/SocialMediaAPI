@@ -80,22 +80,19 @@ jobs:
         uses: actions/cache@v5
         with:
           path: /tmp/docker-images
-          key: docker-images-${{ runner.os }}-mssql-2022-ryuk-0.14.0
+          key: docker-images-${{ runner.os }}-mssql-2022-latest
 
       - name: Load cached images
         if: steps.cache-docker.outputs.cache-hit == 'true'
         run: |
           docker load < /tmp/docker-images/mssql.tar
-          docker load < /tmp/docker-images/ryuk.tar
 
       - name: Pull and save images
         if: steps.cache-docker.outputs.cache-hit != 'true'
         run: |
           docker pull mcr.microsoft.com/mssql/server:2022-latest
-          docker pull testcontainersofficial/ryuk:0.14.0
           mkdir -p /tmp/docker-images
           docker save mcr.microsoft.com/mssql/server:2022-latest > /tmp/docker-images/mssql.tar
-          docker save testcontainersofficial/ryuk:0.14.0 > /tmp/docker-images/ryuk.tar
 
       - name: Run integration tests
         env:
