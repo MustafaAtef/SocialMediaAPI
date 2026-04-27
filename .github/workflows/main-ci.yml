@@ -75,28 +75,7 @@ jobs:
           cache-from: type=gha,scope=test-image
           cache-to: type=gha,mode=max,scope=test-image
 
-      - name: Cache Testcontainers Docker images
-        id: cache-docker
-        uses: actions/cache@v5
-        with:
-          path: /tmp/docker-images
-          key: docker-images-${{ runner.os }}-mssql-2022-latest
-
-      - name: Load cached images
-        if: steps.cache-docker.outputs.cache-hit == 'true'
-        run: |
-          docker load < /tmp/docker-images/mssql.tar
-
-      - name: Pull and save images
-        if: steps.cache-docker.outputs.cache-hit != 'true'
-        run: |
-          docker pull mcr.microsoft.com/mssql/server:2022-latest
-          mkdir -p /tmp/docker-images
-          docker save mcr.microsoft.com/mssql/server:2022-latest > /tmp/docker-images/mssql.tar
-
       - name: Run integration tests
-        env:
-          TESTCONTAINERS_RYUK_DISABLED: "false"
         run: |
           mkdir -p ${{ github.workspace }}/test-results/integration
           docker run --rm \
