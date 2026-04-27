@@ -13,6 +13,7 @@ using Xunit;
 
 namespace SocialMedia.IntegrationTests.Auth;
 
+[Trait("Category", "Integration")]
 public class AuthEndpointsTests(IntegrationTestWebAppFactory factory) : BaseIntegrationTest(factory)
 {
     [Fact]

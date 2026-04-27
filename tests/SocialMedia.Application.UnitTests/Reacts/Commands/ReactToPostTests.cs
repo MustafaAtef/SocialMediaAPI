@@ -16,6 +16,7 @@ using Xunit;
 
 namespace SocialMedia.Application.UnitTests;
 
+[Trait("Category", "Unit")]
 public class ReactToPostCommandHandlerTests
 {
     private readonly ReactToPostCommandHandler _sut;

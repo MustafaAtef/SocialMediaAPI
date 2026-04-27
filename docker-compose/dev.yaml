@@ -1,6 +1,8 @@
 services:
   social-api:
-    build: .
+    build:
+      context: ../
+      dockerfile: Docker/Dockerfile.dev
     container_name: SocialMedia.API
     ports:
       - 5039:5000
@@ -8,6 +10,8 @@ services:
       - social-db
     volumes:
       - api_wwwroot:/app/wwwroot
+      - ../:/app
+      - nuget_cache:/root/.nuget/packages
   social-db:
     image: mcr.microsoft.com/mssql/server:2022-latest
     container_name: SocialMedia.DB
@@ -32,5 +36,6 @@ services:
 
 volumes:
   db_data:
-  api_wwwroot:
   seq_data:
+  api_wwwroot:
+  nuget_cache:

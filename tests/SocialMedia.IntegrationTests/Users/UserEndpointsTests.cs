@@ -12,6 +12,7 @@ using Xunit;
 
 namespace SocialMedia.IntegrationTests.Users;
 
+[Trait("Category", "Integration")]
 public class UserEndpointsTests(IntegrationTestWebAppFactory factory) : BaseIntegrationTest(factory)
 {
     [Fact]

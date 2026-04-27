@@ -10,6 +10,7 @@ using Xunit;
 
 namespace SocialMedia.Application.UnitTests.Posts;
 
+[Trait("Category", "Unit")]
 public class PostCommandValidatorsTests
 {
     [Fact]

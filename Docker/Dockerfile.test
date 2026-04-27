@@ -1,0 +1,29 @@
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+WORKDIR /app
+
+ENV NUGET_PACKAGES=/root/.nuget/packages
+
+COPY Directory.Packages.props .
+COPY Directory.Build.props .
+COPY ./src/SocialMedia.WebApi/*.csproj           ./src/SocialMedia.WebApi/
+COPY ./src/SocialMedia.Application/*.csproj      ./src/SocialMedia.Application/
+COPY ./src/SocialMedia.Core/*.csproj             ./src/SocialMedia.Core/
+COPY ./src/SocialMedia.Infrastructure/*.csproj   ./src/SocialMedia.Infrastructure/
+COPY ./tests/SocialMedia.Application.UnitTests/*.csproj   ./tests/SocialMedia.Application.UnitTests/
+COPY ./tests/SocialMedia.IntegrationTests/*.csproj        ./tests/SocialMedia.IntegrationTests/
+COPY ./SocialMedia.slnx .
+
+RUN --mount=type=cache,id=nuget-http,target=/root/.local/share/NuGet/http-cache \
+    --mount=type=cache,id=nuget-global,target=$NUGET_PACKAGES \
+    dotnet restore ./SocialMedia.slnx
+
+COPY . .
+
+RUN --mount=type=cache,id=nuget-http,target=/root/.local/share/NuGet/http-cache \
+    --mount=type=cache,id=nuget-global,target=$NUGET_PACKAGES \
+    dotnet build ./SocialMedia.slnx \
+    --no-restore \
+    -c Debug
+
+ENTRYPOINT ["dotnet", "test"]
+CMD ["--no-build"]

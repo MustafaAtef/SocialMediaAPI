@@ -10,6 +10,7 @@ using Xunit;
 
 namespace SocialMedia.IntegrationTests.Posts;
 
+[Trait("Category", "Integration")]
 public class PostEndpointsTests(IntegrationTestWebAppFactory factory) : BaseIntegrationTest(factory)
 {
     [Fact]

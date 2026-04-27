@@ -12,6 +12,7 @@ using Xunit;
 
 namespace SocialMedia.IntegrationTests.Reacts;
 
+[Trait("Category", "Integration")]
 public class ReactEndpointsTests(IntegrationTestWebAppFactory factory) : BaseIntegrationTest(factory)
 {
     [Fact]

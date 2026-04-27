@@ -11,6 +11,7 @@ using Xunit;
 
 namespace SocialMedia.IntegrationTests.Comments;
 
+[Trait("Category", "Integration")]
 public class CommentEndpointsTests(IntegrationTestWebAppFactory factory) : BaseIntegrationTest(factory)
 {
     [Fact]

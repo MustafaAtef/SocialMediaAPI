@@ -15,6 +15,7 @@ using Xunit;
 
 namespace SocialMedia.Application.UnitTests;
 
+[Trait("Category", "Unit")]
 public class UpdateCommentCommandHandlerTests
 {
     private readonly UpdateCommentCommandHandler _sut;

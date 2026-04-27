@@ -8,6 +8,7 @@ using Xunit;
 
 namespace SocialMedia.Application.UnitTests;
 
+[Trait("Category", "Unit")]
 public class UserCommandValidatorsTests
 {
     [Fact]

@@ -21,6 +21,7 @@ using Xunit;
 
 namespace SocialMedia.Application.UnitTests.Posts;
 
+[Trait("Category", "Unit")]
 public class UpdatePostCommandHandlerTests
 {
     private readonly UpdatePostCommandHandler _sut;

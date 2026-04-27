@@ -15,6 +15,7 @@ using Xunit;
 
 namespace SocialMedia.Application.UnitTests;
 
+[Trait("Category", "Unit")]
 public class RemovePostReactCommandHandlerTests
 {
     private readonly RemovePostReactCommandHandler _sut;

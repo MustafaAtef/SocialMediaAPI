@@ -17,6 +17,7 @@ using Xunit;
 
 namespace SocialMedia.Application.UnitTests.Posts;
 
+[Trait("Category", "Unit")]
 public class SoftDeletePostCommandHandlerTests
 {
     private readonly SoftDeletePostCommandHandler _sut;

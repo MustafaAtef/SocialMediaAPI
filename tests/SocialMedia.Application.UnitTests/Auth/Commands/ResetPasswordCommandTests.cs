@@ -14,6 +14,7 @@ using Xunit;
 
 namespace SocialMedia.Application.UnitTests;
 
+[Trait("Category", "Unit")]
 public class ResetPasswordCommandHandlerTests
 {
     private readonly ResetPasswordCommandHandler _sut;

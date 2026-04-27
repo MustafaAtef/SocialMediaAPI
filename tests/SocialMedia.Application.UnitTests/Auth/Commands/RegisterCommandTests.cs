@@ -20,6 +20,7 @@ using Xunit;
 
 namespace SocialMedia.Application.UnitTests;
 
+[Trait("Category", "Unit")]
 public class RegisterCommandHandlerTests
 {
     private readonly RegisterCommandHandler _sut;

@@ -13,6 +13,7 @@ using Xunit;
 
 namespace SocialMedia.Application.UnitTests;
 
+[Trait("Category", "Unit")]
 public class VerifyEmailCommandHandlerTests
 {
     private readonly VerifyEmailCommandHandler _sut;
