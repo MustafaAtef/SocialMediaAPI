@@ -23,8 +23,7 @@ COPY . .
 RUN --mount=type=cache,target=/root/.local/share/NuGet/http-cache \
     --mount=type=cache,target=$NUGET_PACKAGES \
     dotnet build ./SocialMedia.slnx \
-    --no-restore \
-    -c Debug
+    -c Release
 
 ENTRYPOINT ["dotnet", "test"]
 CMD ["--no-build"]
