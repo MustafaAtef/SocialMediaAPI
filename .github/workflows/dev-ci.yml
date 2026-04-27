@@ -8,42 +8,42 @@ on:
   workflow_dispatch:
 
 jobs:
-unit-tests:
-  name: Unit Tests
-  runs-on: ubuntu-latest
+  unit-tests:
+    name: Unit Tests
+    runs-on: ubuntu-latest
 
-  steps:
-    - name: Checkout
-      uses: actions/checkout@v6
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
 
-    - name: Build test image
-      uses: docker/build-push-action@v7
-      with:
-        context: .
-        file: Docker/Dockerfile.test
-        push: false
-        load: true
-        tags: socialmedia-test:${{ github.sha }}
-        cache-from: type=gha,scope=test-image
-        cache-to: type=gha,mode=max,scope=test-image
-    - name: Run unit tests
-      run: |
-        mkdir -p ${{ github.workspace }}/test-results/unit
-        docker run --rm \
-          -v ${{ github.workspace }}/test-results/unit:/app/test-results \
-          socialmedia-test:${{ github.sha }} \
-          --no-build \
-          --filter "Category=Unit" \
-          --logger "trx;LogFileName=unit-results.trx" \
-          --results-directory /app/test-results
+      - name: Build test image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: Docker/Dockerfile.test
+          push: false
+          load: true
+          tags: socialmedia-test:${{ github.sha }}
+          cache-from: type=gha,scope=test-image
+          cache-to: type=gha,mode=max,scope=test-image
+      - name: Run unit tests
+        run: |
+          mkdir -p ${{ github.workspace }}/test-results/unit
+          docker run --rm \
+            -v ${{ github.workspace }}/test-results/unit:/app/test-results \
+            socialmedia-test:${{ github.sha }} \
+            --no-build \
+            --filter "Category=Unit" \
+            --logger "trx;LogFileName=unit-results.trx" \
+            --results-directory /app/test-results
 
-    - name: Publish unit test results
-      uses: dorny/test-reporter@v3
-      if: always()
-      with:
-        name: Unit Test Results
-        path: test-results/unit/*.trx
-        reporter: dotnet-trx
+      - name: Publish unit test results
+        uses: dorny/test-reporter@v3
+        if: always()
+        with:
+          name: Unit Test Results
+          path: test-results/unit/*.trx
+          reporter: dotnet-trx
