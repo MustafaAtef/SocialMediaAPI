@@ -10,7 +10,8 @@ using SocialMedia.Core.Enumerations;
 namespace SocialMedia.WebApi.Hubs;
 
 [SignalRHub]
-public class ChatHub : Hub
+[Authorize]
+public class ChatHub : Hub<IChatClient>
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IUserService _userService;
@@ -39,7 +40,7 @@ public class ChatHub : Hub
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, group.Id.ToString());
             if (userFirstConnection)
-                await Clients.Group(group.Id.ToString()).SendAsync("DeliveredMessages", new DeliveredMessagesDto()
+                await Clients.Group(group.Id.ToString()).DeliveredMessages(new DeliveredMessagesDto()
                 {
                     GroudId = group.Id,
                     RecieverId = user.Id
@@ -99,7 +100,7 @@ public class ChatHub : Hub
     public async Task ReadMessagesInGroup(ReadMessagesInGroupDto readMessagesInGroupDto)
     {
         await _unitOfWork.Users.UpdateDeliveredMessagesToSeen(readMessagesInGroupDto.RecieverId, readMessagesInGroupDto.GroupId);
-        await Clients.Group(readMessagesInGroupDto.GroupId.ToString()).SendAsync("SeenMessages", readMessagesInGroupDto);
+        await Clients.Group(readMessagesInGroupDto.GroupId.ToString()).SeenMessages(readMessagesInGroupDto);
     }
 
     private async Task _saveAndBroadcastMessage(Group group, UserDto tokenUser, string message)
@@ -123,7 +124,7 @@ public class ChatHub : Hub
         }
         group.Messages.Add(msg);
         await _unitOfWork.SaveChangesAsync();
-        await Clients.Groups(group.Id.ToString()).SendAsync("NewMessage", new MessageDto
+        await Clients.Groups(group.Id.ToString()).NewMessage(new MessageDto
         {
             Id = msg.Id,
             GroupId = group.Id,
