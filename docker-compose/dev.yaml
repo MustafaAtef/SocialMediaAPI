@@ -2,7 +2,7 @@ services:
   social-api:
     build:
       context: ../
-      dockerfile: Docker/Dockerfile.dev
+      dockerfile: docker/Dockerfile.dev
     container_name: SocialMedia.API
     ports:
       - 5039:5000

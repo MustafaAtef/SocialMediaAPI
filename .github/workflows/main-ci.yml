@@ -70,7 +70,7 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           context: .
-          file: Docker/Dockerfile.test
+          file: docker/Dockerfile.test
           push: false
           load: true
           tags: socialmedia-test:${{ github.sha }}
